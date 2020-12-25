@@ -46,7 +46,7 @@ class _NewsListScreenState extends State<NewsListScreen>
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: Text("まとめさん"),
+          title: Text("まとめくん"),
           centerTitle: true,
         ),
         bottomNavigationBar: SafeArea(
