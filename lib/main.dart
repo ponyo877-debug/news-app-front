@@ -7,7 +7,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: "まとめさん",
+      title: "まとめくん",
       theme: ThemeData.dark(),
       debugShowCheckedModeBanner: false,
       home: NewsListScreen(),
