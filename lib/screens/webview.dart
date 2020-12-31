@@ -113,7 +113,7 @@ class _MatomeWebView extends State<MatomeWebView> {
     var response = await http.Client()
         .get(Uri.parse(loaduri), headers: {'User-Agent': userAgent});
     // headers: {'Content-Type': 'text/html; charset=euc-jp', 'User-Agent': userAgent});
-    // print("Response status: ${response.statusCode}");
+    print("Response status: ${response.statusCode}");
     if (response.statusCode == 200) {
       var _headers = response.headers['content-type'].split('charset=');
       if (_headers.length == 2) {
@@ -121,6 +121,7 @@ class _MatomeWebView extends State<MatomeWebView> {
       } else {
         _decode_charset = 'utf-8';
       }
+      print("decoded1: ");
       print("headers: ${_headers.length}");
       // print("Response bodyBytes: ${response.bodyBytes}");
       // var responseBody = utf8.decode(response.bodyBytes);
@@ -129,7 +130,9 @@ class _MatomeWebView extends State<MatomeWebView> {
           await CharsetConverter.decode(_decode_charset, response.bodyBytes);
       // String decoded = await CharsetConverter.decode("EUC-JP", response.bodyBytes);
       // printWrapped(response.body);
-      // printWrapped("decoded: ${decoded}");
+      print("_decode_charset: ${_decode_charset}");
+      print("response.bodyBytes: ${response.bodyBytes}");
+      print("decoded: ${decoded}");
       // var document = parse(response.body);
       var document = parse(decoded);
       return document.outerHtml;
