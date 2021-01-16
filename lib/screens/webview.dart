@@ -88,7 +88,49 @@ class _MatomeWebView extends State<MatomeWebView> {
     var blogTitle = articleHeaders[0].outerHtml;
     var articleTitle = articleHeaders[1].outerHtml;
     var articleBody =
-        document.querySelector('div#article-contents.article-body').outerHtml;
+        document
+            .querySelector('div#article-contents.article-body')
+            .outerHtml;
+    // to here
+    /*
+    #id.class
+
+body #basic
+  div .class
+    div .container-inner
+      div .content
+
+# BlogTitle
+header .section-box
+
+# ArticleTitle
+header .section-box
+
+# ArticleContent
+div .article-body-outer box box-padding box-margin box-border article-body-outer-bottom
+  div #article-contents.article-body
+     */
+    var style = document.head.querySelectorAll('link[rel="stylesheet"]'); // [rel="stylesheet"]
+
+    var body = document.body.outerHtml;
+    document.body.querySelector('div.article-body-outer').children.clear();
+    /*
+    document.head.children.clear();
+    for (int i = 0; i < style.length; i++){
+      // print("sasa" + style[i].toString() + "sasa");
+      document.head.children.add(style[i]);
+    }
+
+    var temp2 = document.body.querySelector('div.class');
+    document.body.children.clear();
+    document.body.children.add(temp2);
+    var temp3 = temp2.querySelector('div.container-inner');
+     */
+    // print("sasa" + style.toString() + "sasa");
+    // document.children.clear();
+    // document.children.add(newToDo);
+    // from here
+    /*
     var modifiedHtml = Uri.dataFromString(
             '<html><body>' +
                 blogTitle +
@@ -98,6 +140,12 @@ class _MatomeWebView extends State<MatomeWebView> {
             //'<html><body>Dummy_modifiedHtml</body></html>', //snapshot.data,
             mimeType: 'text/html',
             encoding: Encoding.getByName('UTF-8'))
+        .toString();
+             */
+    var modifiedHtml = Uri.dataFromString(
+        document.head.outerHtml + document.body.outerHtml,
+        mimeType: 'text/html',
+        encoding: Encoding.getByName('UTF-8'))
         .toString();
     return modifiedHtml;
   }
@@ -127,12 +175,12 @@ class _MatomeWebView extends State<MatomeWebView> {
       // var responseBody = utf8.decode(response.bodyBytes);
       // print(EucJP().decode(utf8.decode(response.bodyBytes)));
       String decoded =
-          await CharsetConverter.decode(_decode_charset, response.bodyBytes);
+      await CharsetConverter.decode(_decode_charset, response.bodyBytes);
       // String decoded = await CharsetConverter.decode("EUC-JP", response.bodyBytes);
       // printWrapped(response.body);
       print("_decode_charset: ${_decode_charset}");
       print("response.bodyBytes: ${response.bodyBytes}");
-      print("decoded: ${decoded}");
+      // print("decoded: ${decoded}");
       // var document = parse(response.body);
       var document = parse(decoded);
       return document.outerHtml;
