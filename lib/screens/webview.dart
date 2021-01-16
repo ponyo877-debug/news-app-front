@@ -31,7 +31,7 @@ class _MatomeWebView extends State<MatomeWebView> {
   // final String title;
   // final String selectedUrl;
   // String outerHtmlstring = 'None';
-
+  var livedoorhosts = ['blog.livedoor.jp', 'hamusoku.com', 'himasoku.com', 'news4vip.livedoor.biz'];
   // add_20201227
   WebViewController _controller;
 
@@ -57,19 +57,31 @@ class _MatomeWebView extends State<MatomeWebView> {
               onWebViewCreated: (WebViewController webViewController) {
                 // controller.complete(webViewController);
                 /*
-                var orgHtml = Uri.dataFromString(snapshot.data,
-                        mimeType: 'text/html',
-                        encoding: Encoding.getByName('UTF-8'))
-                    .toString();
+                var modifiedHtml;
+                var hostName = Uri.parse(widget.selectedUrl).host;
+                if(livedoorhosts.contains(hostName)) {
+                  modifiedHtml = arrangeforLivedoorBlog(snapshot.data);
+                } else {
+                  modifiedHtml = Uri.dataFromString(snapshot.data.outerHtml,
+                      mimeType: 'text/html',
+                      encoding: Encoding.getByName('UTF-8'))
+                      .toString();
+                }
                  */
-                var modifiedHtml = arrangeBlog(snapshot.data);
                 _controller = webViewController;
-                // print("orgHtml: ${orgHtml}");
-                _controller.loadUrl(modifiedHtml);
+                _controller.loadUrl(snapshot.data);
               },
             );
           } else {
-            return Text("データが存在しません");
+            // return Text("データが存在しません");
+            return new Center(
+              child: new Container(
+                margin: const EdgeInsets.only(top: 8.0),
+                width: 32.0,
+                height: 32.0,
+                child: const CircularProgressIndicator(),
+              ),
+            );
           }
         },
       ),
@@ -81,76 +93,136 @@ class _MatomeWebView extends State<MatomeWebView> {
     pattern.allMatches(text).forEach((match) => print(match.group(0)));
   }
 
+  Future<dom.Element> getNextPage(String Url, int p) async {
+    Element dummy;
+    var nextUrl = Url.replaceFirst('p=2', 'p=' + p.toString());
+    var nextBody = await _loadUriDom(nextUrl);
+    return nextBody.querySelector('div#article-contents.article-body');
+  }
+
   // https://itnext.io/write-your-first-web-scraper-in-dart-243c7bb4d05
-  String arrangeBlog(String orgHtml) {
-    var document = parse(orgHtml);
-    var articleHeaders = document.querySelectorAll('header.section-box');
-    var blogTitle = articleHeaders[0].outerHtml;
-    var articleTitle = articleHeaders[1].outerHtml;
-    var articleBody =
-        document
-            .querySelector('div#article-contents.article-body')
-            .outerHtml;
-    // to here
-    /*
-    #id.class
+  Future<String> arrangeforLivedoorBlog(dom.Document doc/*String orgHtml*/) async {
+    // var doc = parse(orgHtml);
 
-body #basic
-  div .class
-    div .container-inner
-      div .content
-
-# BlogTitle
-header .section-box
-
-# ArticleTitle
-header .section-box
-
-# ArticleContent
-div .article-body-outer box box-padding box-margin box-border article-body-outer-bottom
-  div #article-contents.article-body
-     */
-    var style = document.head.querySelectorAll('link[rel="stylesheet"]'); // [rel="stylesheet"]
-
-    var body = document.body.outerHtml;
-    document.body.querySelector('div.article-body-outer').children.clear();
-    /*
-    document.head.children.clear();
-    for (int i = 0; i < style.length; i++){
-      // print("sasa" + style[i].toString() + "sasa");
-      document.head.children.add(style[i]);
+    // arrange header
+    var linkstyle = doc.head.querySelectorAll('link[rel="stylesheet"]');
+    var orgstyle = doc.head.querySelector('style');
+    doc.head.children.clear();
+    for (int i = 0; i < linkstyle.length; i++){
+      doc.head.children.add(linkstyle[i]);
+    }
+    if (orgstyle != null) {
+      doc.head.children.add(orgstyle);
     }
 
-    var temp2 = document.body.querySelector('div.class');
-    document.body.children.clear();
-    document.body.children.add(temp2);
-    var temp3 = temp2.querySelector('div.container-inner');
-     */
-    // print("sasa" + style.toString() + "sasa");
-    // document.children.clear();
-    // document.children.add(newToDo);
-    // from here
-    /*
+    // arrange body
+    var articleBody = doc.querySelector('div#article-contents.article-body');
+    var nextPage = doc.body.querySelector('p.next');
+    var pageCount;
+    if(nextPage != null) {
+      print("doc.body.querySelector('p.age-current'): " + doc.body.querySelector('p.page-current').outerHtml);
+      pageCount = int.parse(doc.body.querySelector('p.page-current').text.split('/').last);
+    }
+    doc.body.querySelector('div.article-body-outer').children.clear();
+    doc.body.querySelector('div.article-body-outer').children.add(articleBody);
+
+    if(nextPage != null) {
+      //print("doc.body.querySelector('p.age-current'): " + doc.body.querySelector('p.next').outerHtml);
+      //var pageCount = int.parse(doc.body.querySelector('p.age-current').text.split('/').last);
+      print("nextPage: " + nextPage.outerHtml);
+      // print("pageCount: " + pageCount.toString());
+      var nextUrl = nextPage.querySelector('a').attributes['href'];
+      print("nextUrl: " + nextUrl);
+      for (int p = 2; p <= pageCount; p++) {
+        var nextBody = await getNextPage(nextUrl, p);
+        doc.body.querySelector('div.article-body-outer').children.add(nextBody);
+      }
+    }
+
+
+    var articleHeaders = doc.querySelectorAll('header.section-box');
+    var blogTitle = articleHeaders[0];
+    var articleTitle = articleHeaders[1];
+    var temp = doc.body.querySelector('div.article-body-outer');
+    doc.body.querySelector('div.content').children.clear();
+    doc.body.querySelector('div.content').children.add(blogTitle);
+    doc.body.querySelector('div.content').children.add(articleTitle);
+    doc.body.querySelector('div.content').children.add(temp);
+
+    temp = doc.body.querySelector('div.content');
+    doc.body.querySelector('div.container-inner').children.clear();
+    doc.body.querySelector('div.container-inner').children.add(temp);
+
+    temp = doc.body.querySelector('div.container-inner');
+    doc.body.querySelector('div.container').children.clear();
+    doc.body.querySelector('div.container').children.add(temp);
+
+    temp = doc.body.querySelector('div.container');
+    doc.body.children.clear();
+    doc.body.children.add(temp);
+
     var modifiedHtml = Uri.dataFromString(
-            '<html><body>' +
-                blogTitle +
-                articleTitle +
-                articleBody +
-                '</body></html>',
-            //'<html><body>Dummy_modifiedHtml</body></html>', //snapshot.data,
+            doc.head.outerHtml + doc.body.outerHtml,
             mimeType: 'text/html',
             encoding: Encoding.getByName('UTF-8'))
-        .toString();
-             */
-    var modifiedHtml = Uri.dataFromString(
-        document.head.outerHtml + document.body.outerHtml,
-        mimeType: 'text/html',
-        encoding: Encoding.getByName('UTF-8'))
         .toString();
     return modifiedHtml;
   }
 
-  Future<String> _loadUri(loaduri) async {
+  Future<String>/*Future<String>*/ _loadUri(loaduri) async {
+    String userAgent, _decode_charset;
+    try {
+      userAgent = await FlutterUserAgent.getPropertyAsync('userAgent');
+      print("userAgent: ${userAgent}");
+    } on PlatformException {
+      userAgent = '<error>';
+    }
+    var response = await http.Client()
+        .get(Uri.parse(loaduri), headers: {'User-Agent': userAgent});
+    // headers: {'Content-Type': 'text/html; charset=euc-jp', 'User-Agent': userAgent});
+    print("Response status: ${response.statusCode}");
+    if (response.statusCode == 200) {
+      var _headers = response.headers['content-type'].split('charset=');
+      if (_headers.length == 2) {
+        _decode_charset = _headers.last;
+      } else {
+        _decode_charset = 'utf-8';
+      }
+      print("decoded1: ");
+      print("headers: ${_headers.length}");
+      // print("Response bodyBytes: ${response.bodyBytes}");
+      // var responseBody = utf8.decode(response.bodyBytes);
+      // print(EucJP().decode(utf8.decode(response.bodyBytes)));
+      String decoded =
+          await CharsetConverter.decode(_decode_charset, response.bodyBytes);
+      // String decoded = await CharsetConverter.decode("EUC-JP", response.bodyBytes);
+      // printWrapped(response.body);
+      print("_decode_charset: ${_decode_charset}");
+      print("response.bodyBytes: ${response.bodyBytes}");
+      // print("decoded: ${decoded}");
+      // var doc = parse(response.body);
+
+      String modifiedHtml;
+      var hostName = Uri.parse(loaduri).host;
+      if(livedoorhosts.contains(hostName)) {
+        var doc = parse(decoded);
+        print("hostName: " + hostName);
+        modifiedHtml = await arrangeforLivedoorBlog(doc);
+      } else {
+        modifiedHtml = Uri.dataFromString(decoded,
+            mimeType: 'text/html',
+            encoding: Encoding.getByName('UTF-8'))
+            .toString();
+      }
+      return modifiedHtml;
+      // return doc.outerHtml;
+      // return doc;
+    } else {
+      throw Exception();
+    }
+  }
+
+  Future<dom.Document>/*Future<String>*/ _loadUriDom(loaduri) async {
     String userAgent, _decode_charset;
     try {
       userAgent = await FlutterUserAgent.getPropertyAsync('userAgent');
@@ -181,10 +253,11 @@ div .article-body-outer box box-padding box-margin box-border article-body-outer
       print("_decode_charset: ${_decode_charset}");
       print("response.bodyBytes: ${response.bodyBytes}");
       // print("decoded: ${decoded}");
-      // var document = parse(response.body);
-      var document = parse(decoded);
-      return document.outerHtml;
-      // return document;
+      // var doc = parse(response.body);
+      return parse(decoded);
+      // return doc;
+      // return doc.outerHtml;
+      // return doc;
     } else {
       throw Exception();
     }
