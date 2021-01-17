@@ -89,19 +89,18 @@ class _MatomeWebView extends State<MatomeWebView> {
   }
 
   void printWrapped(String text) {
-    final pattern = RegExp('.{1, 800}'); // 800 is the size of each chunk
+    final pattern = RegExp('.{1, 100}'); // 800 is the size of each chunk
     pattern.allMatches(text).forEach((match) => print(match.group(0)));
   }
 
   Future<dom.Element> getNextPage(String Url, int p) async {
-    Element dummy;
     var nextUrl = Url.replaceFirst('p=2', 'p=' + p.toString());
     var nextBody = await _loadUriDom(nextUrl);
     return nextBody.querySelector('div#article-contents.article-body');
   }
 
   // https://itnext.io/write-your-first-web-scraper-in-dart-243c7bb4d05
-  Future<String> arrangeforLivedoorBlog(dom.Document doc/*String orgHtml*/) async {
+  Future<String> arrangeforLivedoorBlog(dom.Document doc/*String orgHtml*/, String hostName) async {
     // var doc = parse(orgHtml);
 
     // arrange header
@@ -129,8 +128,6 @@ class _MatomeWebView extends State<MatomeWebView> {
     if(nextPage != null) {
       //print("doc.body.querySelector('p.age-current'): " + doc.body.querySelector('p.next').outerHtml);
       //var pageCount = int.parse(doc.body.querySelector('p.age-current').text.split('/').last);
-      print("nextPage: " + nextPage.outerHtml);
-      // print("pageCount: " + pageCount.toString());
       var nextUrl = nextPage.querySelector('a').attributes['href'];
       print("nextUrl: " + nextUrl);
       for (int p = 2; p <= pageCount; p++) {
@@ -139,7 +136,8 @@ class _MatomeWebView extends State<MatomeWebView> {
       }
     }
 
-
+    // doc.body.querySelector('div#f984a').remove();
+    // doc.body.querySelector('section').remove();
     var articleHeaders = doc.querySelectorAll('header.section-box');
     var blogTitle = articleHeaders[0];
     var articleTitle = articleHeaders[1];
@@ -160,6 +158,54 @@ class _MatomeWebView extends State<MatomeWebView> {
     temp = doc.body.querySelector('div.container');
     doc.body.children.clear();
     doc.body.children.add(temp);
+
+    // delete ads From
+    var scriptTag;
+    // ニュー速クオリティ
+    temp = doc.body.querySelector('script[src="https://blogroll.livedoor.net/js/blogroll.js"]');
+    if (temp != null){
+      temp.remove();
+    }
+    scriptTag = doc.body.querySelectorAll('div#f984a');
+    for (int i = 0; i < scriptTag.length; i++) {
+      scriptTag[i].remove();
+    }
+    // doc.body.querySelector('a[target="_blank"]').remove();
+    // 暇速
+    temp = doc.body.querySelector('div.article_mid_v2');
+    if (temp != null) {
+      temp.remove();
+    }
+    temp = doc.body.querySelector('div#article_low_v2');
+    if (temp != null) {
+      temp.remove();
+    }
+    scriptTag = doc.body.querySelectorAll('iframe');
+    for (int i = 0; i < scriptTag.length; i++) {
+      scriptTag[i].remove();
+    }
+    //VIPPERな俺
+    if(hostName == "blog.livedoor.jp") {
+      /*
+    scriptTag = doc.body.querySelectorAll('a[target="_blank"]');
+    for (int i = 0; i < scriptTag.length; i++) {
+      scriptTag[i].remove();
+    }
+    */
+      // scriptTag = doc.body.querySelectorAll('a[href*="http://blog.livedoor.jp/news23vip/archives"]');
+      scriptTag = doc.body.querySelectorAll('a');
+      var scriptTagwithBR = doc.body.querySelectorAll('br');
+      var allbrcount = scriptTagwithBR.length;;
+      for (int i = 0; i < scriptTag.length; i++) {
+        // scriptTag[i].remove();
+        var hrefurl = scriptTag[i].attributes['href'];
+        if (hrefurl.startsWith('http://blog.livedoor.jp/news23vip/archives/')) {
+          doc.body.querySelector('a[href="$hrefurl"]').remove();
+          scriptTagwithBR[allbrcount - (i + 1)].remove();
+        }
+      }
+    }
+    // delete ads To
 
     var modifiedHtml = Uri.dataFromString(
             doc.head.outerHtml + doc.body.outerHtml,
@@ -207,7 +253,7 @@ class _MatomeWebView extends State<MatomeWebView> {
       if(livedoorhosts.contains(hostName)) {
         var doc = parse(decoded);
         print("hostName: " + hostName);
-        modifiedHtml = await arrangeforLivedoorBlog(doc);
+        modifiedHtml = await arrangeforLivedoorBlog(doc, hostName);
       } else {
         modifiedHtml = Uri.dataFromString(decoded,
             mimeType: 'text/html',
@@ -249,7 +295,6 @@ class _MatomeWebView extends State<MatomeWebView> {
       String decoded =
       await CharsetConverter.decode(_decode_charset, response.bodyBytes);
       // String decoded = await CharsetConverter.decode("EUC-JP", response.bodyBytes);
-      // printWrapped(response.body);
       print("_decode_charset: ${_decode_charset}");
       print("response.bodyBytes: ${response.bodyBytes}");
       // print("decoded: ${decoded}");
