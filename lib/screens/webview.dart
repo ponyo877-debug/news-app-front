@@ -38,11 +38,9 @@ class _MatomeWebView extends State<MatomeWebView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      /*
-        appBar: AppBar(
-          title: Text(title),
-        ),
-       */
+      appBar: AppBar(
+        title: Text(widget.title),
+      ),
       body: FutureBuilder(
         future: _loadUri(widget.selectedUrl),
         builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
@@ -238,23 +236,19 @@ class _MatomeWebView extends State<MatomeWebView> {
 
       String modifiedHtml;
       var doc = parse(decoded);
-      var hostName = 'blog.livedoor.jp';
-      modifiedHtml = await arrangeforLivedoorBlog(doc, hostName);
-      print("modifiedHtml: ${modifiedHtml}");
-      /*
       var hostName = Uri.parse(loaduri).host;
-      print("hostName: " + hostName);
-      if(livedoorhosts.contains(hostName)) {
+      // modifiedHtml = await arrangeforLivedoorBlog(doc, hostName);
+      // print("modifiedHtml: ${modifiedHtml}");
+      // print("hostName: " + hostName);
+      if (livedoorhosts.contains(hostName)) {
         var doc = parse(decoded);
         print("hostName: " + hostName);
         modifiedHtml = await arrangeforLivedoorBlog(doc, hostName);
       } else {
         modifiedHtml = Uri.dataFromString(decoded,
-            mimeType: 'text/html',
-            encoding: Encoding.getByName('UTF-8'))
+                mimeType: 'text/html', encoding: Encoding.getByName('UTF-8'))
             .toString();
       }
-      */
       return modifiedHtml;
     } else {
       throw Exception();
