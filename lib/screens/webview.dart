@@ -10,13 +10,6 @@ import 'package:http/http.dart' as http;
 import 'package:charset_converter/charset_converter.dart';
 import 'package:flutter_user_agent/flutter_user_agent.dart';
 
-// javascript in jQuery
-// https://day-journal.com/memo/try-043/
-
-// VIPPERな俺: delete main ads
-// $('.i-amphtml-inabox.i-amphtml-singledoc.i-amphtml-standalone.i-amphtml-iframed').remove()
-
-// add_20201227
 // WebViewController _controller;
 class MatomeWebView extends StatefulWidget {
   MatomeWebView({Key key, this.title, this.selectedUrl}) : super(key: key);
@@ -29,9 +22,6 @@ class MatomeWebView extends StatefulWidget {
 }
 
 class _MatomeWebView extends State<MatomeWebView> {
-  // final String title;
-  // final String selectedUrl;
-  // String outerHtmlstring = 'None';
   var livedoorhosts = [
     'blog.livedoor.jp',
     'hamusoku.com',
@@ -62,18 +52,6 @@ class _MatomeWebView extends State<MatomeWebView> {
               javascriptMode: JavascriptMode.unrestricted,
               onWebViewCreated: (WebViewController webViewController) {
                 // controller.complete(webViewController);
-                /*
-                var modifiedHtml;
-                var hostName = Uri.parse(widget.selectedUrl).host;
-                if(livedoorhosts.contains(hostName)) {
-                  modifiedHtml = arrangeforLivedoorBlog(snapshot.data);
-                } else {
-                  modifiedHtml = Uri.dataFromString(snapshot.data.outerHtml,
-                      mimeType: 'text/html',
-                      encoding: Encoding.getByName('UTF-8'))
-                      .toString();
-                }
-                 */
                 _controller = webViewController;
                 _controller.loadUrl(snapshot.data);
               },
@@ -113,12 +91,16 @@ class _MatomeWebView extends State<MatomeWebView> {
     // arrange header
     var linkstyle = doc.head.querySelectorAll('link[rel="stylesheet"]');
     var orgstyle = doc.head.querySelector('style');
+    var viewport = doc.head.querySelector('meta[name="viewport"]');
     doc.head.children.clear();
     for (int i = 0; i < linkstyle.length; i++) {
       doc.head.children.add(linkstyle[i]);
     }
     if (orgstyle != null) {
       doc.head.children.add(orgstyle);
+    }
+    if (viewport != null) {
+      doc.head.children.add(viewport);
     }
 
     // arrange body
@@ -238,10 +220,9 @@ class _MatomeWebView extends State<MatomeWebView> {
         .get(Uri.parse(loaduri), headers: {'User-Agent': userAgent});
     // print("response status: ${response.statusCode}");
     // print("response.headers: ${response.headers['content-type']}");
-    // String decoded_body_byte = await CharsetConverter.decode("UTF-8", response.bodyBytes);
-    // print("decoded_body_byte: ${decoded_body_byte}");
-    // int response_length = response.bodyBytes.length;
 
+    // int response_length = response.bodyBytes.length;
+    // String decoded = await CharsetConverter.decode("UTF-8", response.bodyBytes);
     String decoded =
         Utf8Decoder(allowMalformed: true).convert(response.bodyBytes);
 
@@ -260,11 +241,6 @@ class _MatomeWebView extends State<MatomeWebView> {
       var hostName = 'blog.livedoor.jp';
       modifiedHtml = await arrangeforLivedoorBlog(doc, hostName);
       print("modifiedHtml: ${modifiedHtml}");
-      /*
-      modifiedHtml = Uri.dataFromString(decoded,
-              mimeType: 'text/html', encoding: Encoding.getByName('UTF-8'))
-          .toString();
-      */
       /*
       var hostName = Uri.parse(loaduri).host;
       print("hostName: " + hostName);
@@ -295,7 +271,6 @@ class _MatomeWebView extends State<MatomeWebView> {
     }
     var response = await http.Client()
         .get(Uri.parse(loaduri), headers: {'User-Agent': userAgent});
-    // headers: {'Content-Type': 'text/html; charset=euc-jp', 'User-Agent': userAgent});
     print("Response status: ${response.statusCode}");
     if (response.statusCode == 200) {
       var _headers = response.headers['content-type'].split('charset=');
@@ -305,7 +280,6 @@ class _MatomeWebView extends State<MatomeWebView> {
         _decode_charset = 'utf-8';
       }
       print("headers: ${_headers.length}");
-      // String decoded = await CharsetConverter.decode("EUC-JP", response.bodyBytes);
       String decoded =
           Utf8Decoder(allowMalformed: true).convert(response.bodyBytes);
       print("_decode_charset: ${_decode_charset}");
