@@ -9,7 +9,6 @@ import 'package:html/dom.dart' as dom;
 import 'package:http/http.dart' as http;
 import 'package:charset_converter/charset_converter.dart';
 import 'package:flutter_user_agent/flutter_user_agent.dart';
-import 'package:flutter_charset_detector/flutter_charset_detector.dart';
 
 // javascript in jQuery
 // https://day-journal.com/memo/try-043/
@@ -227,7 +226,7 @@ class _MatomeWebView extends State<MatomeWebView> {
     return modifiedHtml;
   }
 
-  Future<String>  _loadUri(loaduri) async {
+  Future<String> _loadUri(loaduri) async {
     String userAgent, _decode_charset;
     try {
       userAgent = await FlutterUserAgent.getPropertyAsync('userAgent');
@@ -235,16 +234,16 @@ class _MatomeWebView extends State<MatomeWebView> {
     } on PlatformException {
       userAgent = '<error>';
     }
-    var response = await http.Client().get(
-        Uri.parse(loaduri),
-        headers: {'User-Agent': userAgent});
+    var response = await http.Client()
+        .get(Uri.parse(loaduri), headers: {'User-Agent': userAgent});
     // print("response status: ${response.statusCode}");
     // print("response.headers: ${response.headers['content-type']}");
     // String decoded_body_byte = await CharsetConverter.decode("UTF-8", response.bodyBytes);
     // print("decoded_body_byte: ${decoded_body_byte}");
     // int response_length = response.bodyBytes.length;
 
-    String decoded = Utf8Decoder(allowMalformed: true).convert(response.bodyBytes);
+    String decoded =
+        Utf8Decoder(allowMalformed: true).convert(response.bodyBytes);
 
     if (response.statusCode == 200) {
       var _headers = response.headers['content-type'].split('charset=');
@@ -305,22 +304,13 @@ class _MatomeWebView extends State<MatomeWebView> {
       } else {
         _decode_charset = 'utf-8';
       }
-      print("decoded1: ");
       print("headers: ${_headers.length}");
-      // print("Response bodyBytes: ${response.bodyBytes}");
-      // var responseBody = utf8.decode(response.bodyBytes);
-      // print(EucJP().decode(utf8.decode(response.bodyBytes)));
-      // String decoded = Utf8Decoder().convert(response.bodyBytes);
+      // String decoded = await CharsetConverter.decode("EUC-JP", response.bodyBytes);
       String decoded =
-          await CharsetConverter.decode("EUC-JP", response.bodyBytes);
+          Utf8Decoder(allowMalformed: true).convert(response.bodyBytes);
       print("_decode_charset: ${_decode_charset}");
       print("response.bodyBytes: ${response.bodyBytes}");
-      // print("decoded: ${decoded}");
-      // var doc = parse(response.body);
       return parse(decoded);
-      // return doc;
-      // return doc.outerHtml;
-      // return doc;
     } else {
       throw Exception();
     }
