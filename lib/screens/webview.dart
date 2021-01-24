@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -8,6 +9,7 @@ import 'package:html/dom.dart' as dom;
 import 'package:http/http.dart' as http;
 import 'package:charset_converter/charset_converter.dart';
 import 'package:flutter_user_agent/flutter_user_agent.dart';
+import 'package:flutter_charset_detector/flutter_charset_detector.dart';
 
 // javascript in jQuery
 // https://day-journal.com/memo/try-043/
@@ -31,7 +33,12 @@ class _MatomeWebView extends State<MatomeWebView> {
   // final String title;
   // final String selectedUrl;
   // String outerHtmlstring = 'None';
-  var livedoorhosts = ['blog.livedoor.jp', 'hamusoku.com', 'himasoku.com', 'news4vip.livedoor.biz'];
+  var livedoorhosts = [
+    'blog.livedoor.jp',
+    'hamusoku.com',
+    'himasoku.com',
+    'news4vip.livedoor.biz'
+  ];
   // add_20201227
   WebViewController _controller;
 
@@ -100,14 +107,15 @@ class _MatomeWebView extends State<MatomeWebView> {
   }
 
   // https://itnext.io/write-your-first-web-scraper-in-dart-243c7bb4d05
-  Future<String> arrangeforLivedoorBlog(dom.Document doc/*String orgHtml*/, String hostName) async {
+  Future<String> arrangeforLivedoorBlog(
+      dom.Document doc /*String orgHtml*/, String hostName) async {
     // var doc = parse(orgHtml);
 
     // arrange header
     var linkstyle = doc.head.querySelectorAll('link[rel="stylesheet"]');
     var orgstyle = doc.head.querySelector('style');
     doc.head.children.clear();
-    for (int i = 0; i < linkstyle.length; i++){
+    for (int i = 0; i < linkstyle.length; i++) {
       doc.head.children.add(linkstyle[i]);
     }
     if (orgstyle != null) {
@@ -118,14 +126,16 @@ class _MatomeWebView extends State<MatomeWebView> {
     var articleBody = doc.querySelector('div#article-contents.article-body');
     var nextPage = doc.body.querySelector('p.next');
     var pageCount;
-    if(nextPage != null) {
-      print("doc.body.querySelector('p.age-current'): " + doc.body.querySelector('p.page-current').outerHtml);
-      pageCount = int.parse(doc.body.querySelector('p.page-current').text.split('/').last);
+    if (nextPage != null) {
+      print("doc.body.querySelector('p.age-current'): " +
+          doc.body.querySelector('p.page-current').outerHtml);
+      pageCount = int.parse(
+          doc.body.querySelector('p.page-current').text.split('/').last);
     }
     doc.body.querySelector('div.article-body-outer').children.clear();
     doc.body.querySelector('div.article-body-outer').children.add(articleBody);
 
-    if(nextPage != null) {
+    if (nextPage != null) {
       //print("doc.body.querySelector('p.age-current'): " + doc.body.querySelector('p.next').outerHtml);
       //var pageCount = int.parse(doc.body.querySelector('p.age-current').text.split('/').last);
       var nextUrl = nextPage.querySelector('a').attributes['href'];
@@ -162,8 +172,9 @@ class _MatomeWebView extends State<MatomeWebView> {
     // delete ads From
     var scriptTag;
     // ニュー速クオリティ
-    temp = doc.body.querySelector('script[src="https://blogroll.livedoor.net/js/blogroll.js"]');
-    if (temp != null){
+    temp = doc.body.querySelector(
+        'script[src="https://blogroll.livedoor.net/js/blogroll.js"]');
+    if (temp != null) {
       temp.remove();
     }
     scriptTag = doc.body.querySelectorAll('div#f984a');
@@ -185,7 +196,7 @@ class _MatomeWebView extends State<MatomeWebView> {
       scriptTag[i].remove();
     }
     //VIPPERな俺
-    if(hostName == "blog.livedoor.jp") {
+    if (hostName == "blog.livedoor.jp") {
       /*
     scriptTag = doc.body.querySelectorAll('a[target="_blank"]');
     for (int i = 0; i < scriptTag.length; i++) {
@@ -195,7 +206,8 @@ class _MatomeWebView extends State<MatomeWebView> {
       // scriptTag = doc.body.querySelectorAll('a[href*="http://blog.livedoor.jp/news23vip/archives"]');
       scriptTag = doc.body.querySelectorAll('a');
       var scriptTagwithBR = doc.body.querySelectorAll('br');
-      var allbrcount = scriptTagwithBR.length;;
+      var allbrcount = scriptTagwithBR.length;
+      ;
       for (int i = 0; i < scriptTag.length; i++) {
         // scriptTag[i].remove();
         var hrefurl = scriptTag[i].attributes['href'];
@@ -215,7 +227,7 @@ class _MatomeWebView extends State<MatomeWebView> {
     return modifiedHtml;
   }
 
-  Future<String>/*Future<String>*/ _loadUri(loaduri) async {
+  Future<String>  _loadUri(loaduri) async {
     String userAgent, _decode_charset;
     try {
       userAgent = await FlutterUserAgent.getPropertyAsync('userAgent');
@@ -223,33 +235,40 @@ class _MatomeWebView extends State<MatomeWebView> {
     } on PlatformException {
       userAgent = '<error>';
     }
-    var response = await http.Client()
-        .get(Uri.parse(loaduri), headers: {'User-Agent': userAgent});
-    // headers: {'Content-Type': 'text/html; charset=euc-jp', 'User-Agent': userAgent});
-    print("Response status: ${response.statusCode}");
+    var response = await http.Client().get(
+        Uri.parse(loaduri),
+        headers: {'User-Agent': userAgent});
+    // print("response status: ${response.statusCode}");
+    // print("response.headers: ${response.headers['content-type']}");
+    // String decoded_body_byte = await CharsetConverter.decode("UTF-8", response.bodyBytes);
+    // print("decoded_body_byte: ${decoded_body_byte}");
+    // int response_length = response.bodyBytes.length;
+
+    String decoded = Utf8Decoder(allowMalformed: true).convert(response.bodyBytes);
+
     if (response.statusCode == 200) {
       var _headers = response.headers['content-type'].split('charset=');
+      print("response.headers: " + response.headers['content-type']);
       if (_headers.length == 2) {
         _decode_charset = _headers.last;
       } else {
         _decode_charset = 'utf-8';
       }
-      print("decoded1: ");
       print("headers: ${_headers.length}");
-      // print("Response bodyBytes: ${response.bodyBytes}");
-      // var responseBody = utf8.decode(response.bodyBytes);
-      // print(EucJP().decode(utf8.decode(response.bodyBytes)));
-      String decoded =
-          await CharsetConverter.decode(_decode_charset, response.bodyBytes);
-      // String decoded = await CharsetConverter.decode("EUC-JP", response.bodyBytes);
-      // printWrapped(response.body);
-      print("_decode_charset: ${_decode_charset}");
-      print("response.bodyBytes: ${response.bodyBytes}");
-      // print("decoded: ${decoded}");
-      // var doc = parse(response.body);
 
       String modifiedHtml;
+      var doc = parse(decoded);
+      var hostName = 'blog.livedoor.jp';
+      modifiedHtml = await arrangeforLivedoorBlog(doc, hostName);
+      print("modifiedHtml: ${modifiedHtml}");
+      /*
+      modifiedHtml = Uri.dataFromString(decoded,
+              mimeType: 'text/html', encoding: Encoding.getByName('UTF-8'))
+          .toString();
+      */
+      /*
       var hostName = Uri.parse(loaduri).host;
+      print("hostName: " + hostName);
       if(livedoorhosts.contains(hostName)) {
         var doc = parse(decoded);
         print("hostName: " + hostName);
@@ -260,15 +279,14 @@ class _MatomeWebView extends State<MatomeWebView> {
             encoding: Encoding.getByName('UTF-8'))
             .toString();
       }
+      */
       return modifiedHtml;
-      // return doc.outerHtml;
-      // return doc;
     } else {
       throw Exception();
     }
   }
 
-  Future<dom.Document>/*Future<String>*/ _loadUriDom(loaduri) async {
+  Future<dom.Document> _loadUriDom(loaduri) async {
     String userAgent, _decode_charset;
     try {
       userAgent = await FlutterUserAgent.getPropertyAsync('userAgent');
@@ -292,9 +310,9 @@ class _MatomeWebView extends State<MatomeWebView> {
       // print("Response bodyBytes: ${response.bodyBytes}");
       // var responseBody = utf8.decode(response.bodyBytes);
       // print(EucJP().decode(utf8.decode(response.bodyBytes)));
+      // String decoded = Utf8Decoder().convert(response.bodyBytes);
       String decoded =
-      await CharsetConverter.decode(_decode_charset, response.bodyBytes);
-      // String decoded = await CharsetConverter.decode("EUC-JP", response.bodyBytes);
+          await CharsetConverter.decode("EUC-JP", response.bodyBytes);
       print("_decode_charset: ${_decode_charset}");
       print("response.bodyBytes: ${response.bodyBytes}");
       // print("decoded: ${decoded}");

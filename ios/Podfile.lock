@@ -2,6 +2,9 @@ PODS:
   - charset_converter (0.0.1):
     - Flutter
   - Flutter (1.0.0)
+  - flutter_charset_detector (0.0.1):
+    - Flutter
+    - UniversalDetector2
   - flutter_user_agent (1.2.2):
     - Flutter
   - FMDB (2.7.5):
@@ -12,12 +15,14 @@ PODS:
   - sqflite (0.0.2):
     - Flutter
     - FMDB (>= 2.7.5)
+  - UniversalDetector2 (2.0.0)
   - webview_flutter (0.0.1):
     - Flutter
 
 DEPENDENCIES:
   - charset_converter (from `.symlinks/plugins/charset_converter/ios`)
   - Flutter (from `Flutter`)
+  - flutter_charset_detector (from `.symlinks/plugins/flutter_charset_detector/ios`)
   - flutter_user_agent (from `.symlinks/plugins/flutter_user_agent/ios`)
   - path_provider (from `.symlinks/plugins/path_provider/ios`)
   - sqflite (from `.symlinks/plugins/sqflite/ios`)
@@ -26,12 +31,15 @@ DEPENDENCIES:
 SPEC REPOS:
   trunk:
     - FMDB
+    - UniversalDetector2
 
 EXTERNAL SOURCES:
   charset_converter:
     :path: ".symlinks/plugins/charset_converter/ios"
   Flutter:
     :path: Flutter
+  flutter_charset_detector:
+    :path: ".symlinks/plugins/flutter_charset_detector/ios"
   flutter_user_agent:
     :path: ".symlinks/plugins/flutter_user_agent/ios"
   path_provider:
@@ -44,12 +52,14 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   charset_converter: 215c7b04932ec2b9ba43be96a9bc34afed3e5322
   Flutter: 0e3d915762c693b495b44d77113d4970485de6ec
+  flutter_charset_detector: c446c2d0da8991a0bd3dbb9842ff3af415484582
   flutter_user_agent: 27c45d034dc31b80948d29998cea52cd3a7bf936
   FMDB: 2ce00b547f966261cd18927a3ddb07cb6f3db82a
   path_provider: abfe2b5c733d04e238b0d8691db0cfd63a27a93c
   sqflite: 6d358c025f5b867b29ed92fc697fd34924e11904
+  UniversalDetector2: 8b226f8a7c8a65a6c449848cb664f92fb83cf81b
   webview_flutter: d2b4d6c66968ad042ad94cbb791f5b72b4678a96
 
-PODFILE CHECKSUM: aafe91acc616949ddb318b77800a7f51bffa2a4c
+PODFILE CHECKSUM: 0960419b8a91feeaa53158f9cef6f819414e3d85
 
 COCOAPODS: 1.10.0
