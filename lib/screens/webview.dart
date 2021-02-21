@@ -227,6 +227,8 @@ class _MatomeWebView extends State<MatomeWebView> {
     if (response.statusCode == 200) {
       var _headers = response.headers['content-type'].split('charset=');
       print("response.headers: " + response.headers['content-type']);
+
+
       if (_headers.length == 2) {
         _decode_charset = _headers.last;
       } else {
