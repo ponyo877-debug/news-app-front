@@ -3,6 +3,8 @@ import 'package:http/http.dart' as http;
 import 'news_card.dart';
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 
 class PostScreen extends StatefulWidget {
   PostScreen();
@@ -14,6 +16,10 @@ class PostScreen extends StatefulWidget {
 // https://qiita.com/taki4227/items/e3c7e640b7986a80b2f9
 // https://qiita.com/najeira/items/454462c794c35b3b600a
 class _PostScreen extends State<PostScreen> with AutomaticKeepAliveClientMixin {
+  static const String kFileName = 'mySkipIDs.csv';
+  File _filePath;
+  bool _fileExists = false;
+
   Map<String, dynamic> data;
   List newsPost = [];
   int updateCount = 0;
@@ -33,6 +39,7 @@ class _PostScreen extends State<PostScreen> with AutomaticKeepAliveClientMixin {
     return Scaffold(
       body: RefreshIndicator(
         onRefresh: () async {
+          updateCount = 0;
           await _getInitPost();
         },
         child: ListView.builder(
@@ -66,22 +73,17 @@ class _PostScreen extends State<PostScreen> with AutomaticKeepAliveClientMixin {
       ),
     );
   }
+  
   // https://qiita.com/kenichiro-yamato/items/12d7199cb2d7812ac0ce
   Future _getInitPost() async {
-    var _skipIDs = "2,3,4,5,6";
+    _filePath = await _localFile;
+    _fileExists = await _filePath.exists();
+    var _skipIDs = "";
+    if (_fileExists) {
+      _skipIDs = await _filePath.readAsString();
+    }
     var getPostURL = baseURL + "/mongo/old" + "?skipIDs=" + _skipIDs;
     http.Response response = await http.get(getPostURL);
-    /*
-    var _reqJson = {
-      "from": 0,
-      "siteIDs": 4,
-    };
-    http.Response response = await http.post(
-        getPostURL,
-        body: json.encode(_reqJson),
-        headers: {"Content-Type": "application/json"}
-        );
-     */
     data = json.decode(response.body);
     if (mounted) {
       setState(() {
@@ -92,7 +94,12 @@ class _PostScreen extends State<PostScreen> with AutomaticKeepAliveClientMixin {
 
   Future _getPost(int updateCount) async {
     int fromPostNum = 15 * updateCount;
-    var _skipIDs = "2,3,4,5,6";
+    _filePath = await _localFile;
+    _fileExists = await _filePath.exists();
+    var _skipIDs = "";
+    if (_fileExists) {
+      _skipIDs = await _filePath.readAsString();
+    }
     var getPostURL = baseURL + "/mongo/old?from=" + fromPostNum.toString() + "&skipIDs=" + _skipIDs;
     debugPrint(getPostURL);
     http.Response response = await http.get(getPostURL);
@@ -102,5 +109,15 @@ class _PostScreen extends State<PostScreen> with AutomaticKeepAliveClientMixin {
         newsPost.addAll(data["data"]);
       });
     }
+  }
+
+  Future<String> get _localPath async {
+    final directory = await getApplicationDocumentsDirectory();
+    return directory.path;
+  }
+
+  Future<File> get _localFile async {
+    final path = await _localPath;
+    return File('$path/$kFileName');
   }
 }
