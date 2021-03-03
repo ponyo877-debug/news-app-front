@@ -15,19 +15,14 @@ class NewsCard extends StatelessWidget {
   final String _url;
   final String _id;
   static const String placeholderImg = 'assets/images/no_image_square.jpg';
-  static const String kFileName = 'myJsonFile.json';
+  static const String kFileName = 'myHistory.json';
 
   NewsCard(
       this._name, this._date, this._site, this._image, this._url, this._id);
 
   bool _fileExists = false;
   File _filePath;
-
-  // First initialization of _json (if there is no json in the file)
-  // Map<String, dynamic> _json = {"data"};
   List _json = [];
-
-  // Map<String, dynamic> _json = {};
   String _jsonString;
 
   Future<String> get _localPath async {
@@ -41,43 +36,17 @@ class NewsCard extends StatelessWidget {
   }
 
   void _writeJson(Map<String, dynamic> _newJson) async {
-    // Initialize the local _filePath
     _filePath = await _localFile;
-    var _oldJson;
-
-    //1. Create _newJson<Map> from input<TextField>
-    // print('1.(_writeJson) _newJson: $_newJson');
     _fileExists = await _filePath.exists();
 
     if (!_fileExists) {
-      // print('create new file because of file is not found: ${_json.last}');
       _filePath.writeAsString('');
     } else {
-      //2. Update _json by adding _newJson<Map> -> _json<Map>
       _jsonString = await _filePath.readAsString();
-      if (_jsonString != "") {
-        _oldJson = json.decode(_jsonString);
-        _json = _oldJson;
-      }
+      _json = json.decode(_jsonString);
     }
-    /*
-    // _json.add(_oldJson);
-    if (_oldJson.length != 0) {
-      _json = _oldJson;
-    } else {
-      _json.add(_oldJson);
-    }
-     */
-    // _json = json.decode(_jsonString);
-    // print('2.(ここが更新されていてほしい) _json(updated): $_json');
     _json.add(_newJson);
-    // print('2.(_writeJson) _json(updated): $_json');
-    print('Tail of List: ${_json.last}');
-    //3. Convert _json ->_jsonString
     _jsonString = json.encode(_json);
-    // print('3.(_writeJson) _jsonString: $_jsonString\n - \n');
-
-    //4. Write _jsonString to the _filePath
     _filePath.writeAsString(_jsonString);
   }
 
@@ -88,15 +57,6 @@ class NewsCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.max,
         children: <Widget>[
           new Container(
-            /*
-            decoration: new BoxDecoration(
-                // color: Colors.red
-                image: DecorationImage(
-                    fit: BoxFit.fill,
-                    image: NetworkImage(_image)
-                )
-            ),
-             */
             child: ListTile(
               leading: thumbnail(_image),
               title: title(_name),

@@ -18,7 +18,7 @@ class _HistoryPostScreen extends State<HistoryPostScreen>
   Map<String, dynamic> data;
   List newsPost = [];
   String baseURL = "http://gitouhon-juku-k8s2.ga";
-  static const String kFileName = 'myJsonFile.json';
+  static const String kFileName = 'myHistory.json';
   bool _fileExists = false;
   File _filePath;
   List _json = [];
@@ -81,8 +81,6 @@ class _HistoryPostScreen extends State<HistoryPostScreen>
           _json = json.decode(_jsonString);
         });
       }
-      // print('2.(_readJson) _json: ${_json.last} \n - \n');
-      // print('2.(_readJson) _json: ${_json} \n - \n');
     }
   }
 }

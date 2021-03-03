@@ -73,7 +73,7 @@ class _PostScreen extends State<PostScreen> with AutomaticKeepAliveClientMixin {
       ),
     );
   }
-  
+
   // https://qiita.com/kenichiro-yamato/items/12d7199cb2d7812ac0ce
   Future _getInitPost() async {
     _filePath = await _localFile;
@@ -101,7 +101,6 @@ class _PostScreen extends State<PostScreen> with AutomaticKeepAliveClientMixin {
       _skipIDs = await _filePath.readAsString();
     }
     var getPostURL = baseURL + "/mongo/old?from=" + fromPostNum.toString() + "&skipIDs=" + _skipIDs;
-    debugPrint(getPostURL);
     http.Response response = await http.get(getPostURL);
     data = json.decode(response.body);
     if (mounted) {
