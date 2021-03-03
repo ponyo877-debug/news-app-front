@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'webview.dart';
+import 'select_sites.dart';
 
 class SettingScreen extends StatelessWidget {
   // final String contactURL = "https://forms.gle/PBs2r2YBbzzdQZd29";
@@ -43,6 +44,17 @@ class SettingScreen extends StatelessWidget {
                           title: "PRIVACY POLICY",
                           selectedUrl: PPURL,
                         )));
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.my_location),
+              title: Text(
+                'SELECT SITES',
+              ),
+              trailing: Icon(Icons.keyboard_arrow_right),
+              onTap: () async {
+                await Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => SelectSites()));
               },
             ),
           ],
