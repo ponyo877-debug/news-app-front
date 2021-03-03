@@ -53,7 +53,7 @@ class _PostScreen extends State<PostScreen> with AutomaticKeepAliveClientMixin {
               return null;
             }
             return NewsCard(
-              "${newsPost[index]["title"]}",
+              "${newsPost[index]["titles"]}",
               "${newsPost[index]["publishedAt"]}",
               "${newsPost[index]["sitetitle"]}",
               "${newsPost[index]["image"]}",
@@ -66,10 +66,22 @@ class _PostScreen extends State<PostScreen> with AutomaticKeepAliveClientMixin {
       ),
     );
   }
-
+  // https://qiita.com/kenichiro-yamato/items/12d7199cb2d7812ac0ce
   Future _getInitPost() async {
-    var getPostURL = baseURL + "/mongo/old?from=0";
+    var _skipIDs = "2,3,4,5,6";
+    var getPostURL = baseURL + "/mongo/old" + "?skipIDs=" + _skipIDs;
     http.Response response = await http.get(getPostURL);
+    /*
+    var _reqJson = {
+      "from": 0,
+      "siteIDs": 4,
+    };
+    http.Response response = await http.post(
+        getPostURL,
+        body: json.encode(_reqJson),
+        headers: {"Content-Type": "application/json"}
+        );
+     */
     data = json.decode(response.body);
     if (mounted) {
       setState(() {
@@ -80,8 +92,8 @@ class _PostScreen extends State<PostScreen> with AutomaticKeepAliveClientMixin {
 
   Future _getPost(int updateCount) async {
     int fromPostNum = 15 * updateCount;
-    // var getPostURL = baseURL + "/old?from=" + fromPostNum.toString();
-    var getPostURL = baseURL + "/mongo/old?from=" + fromPostNum.toString();
+    var _skipIDs = "2,3,4,5,6";
+    var getPostURL = baseURL + "/mongo/old?from=" + fromPostNum.toString() + "&skipIDs=" + _skipIDs;
     debugPrint(getPostURL);
     http.Response response = await http.get(getPostURL);
     data = json.decode(response.body);
