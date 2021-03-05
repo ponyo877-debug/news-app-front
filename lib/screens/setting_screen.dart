@@ -10,14 +10,25 @@ class SettingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: "SETTING",
-      home: Scaffold(
+    //return MaterialApp(
+      //debugShowCheckedModeBanner: false,
+      //title: "SETTING",
+      return Scaffold(
         body: ListView(
           children: <Widget>[
             ListTile(
-              leading: Icon(Icons.my_location),
+              leading: Icon(Icons.select_all),
+              title: Text(
+                'SELECT SITES',
+              ),
+              trailing: Icon(Icons.keyboard_arrow_right),
+              onTap: () async {
+                await Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => SelectSites()));
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.email_outlined),
               title: Text(
                 'CONTACT',
               ),
@@ -32,7 +43,7 @@ class SettingScreen extends StatelessWidget {
               },
             ),
             ListTile(
-              leading: Icon(Icons.my_location),
+              leading: Icon(Icons.privacy_tip_outlined),
               title: Text(
                 'PRIVACY POLICY',
               ),
@@ -46,20 +57,8 @@ class SettingScreen extends StatelessWidget {
                         )));
               },
             ),
-            ListTile(
-              leading: Icon(Icons.my_location),
-              title: Text(
-                'SELECT SITES',
-              ),
-              trailing: Icon(Icons.keyboard_arrow_right),
-              onTap: () async {
-                await Navigator.of(context).push(MaterialPageRoute(
-                        builder: (context) => SelectSites()));
-              },
-            ),
           ],
         ),
-      ),
-    );
+      );
   }
 }
