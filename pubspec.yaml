@@ -36,6 +36,7 @@ dependencies:
   euc: ^1.0.5+7
   charset_converter: ^1.0.3
   flutter_user_agent: ^1.2.2
+  convex_bottom_bar: ^2.7.1+2
 
 flutter_icons:
   android: true
