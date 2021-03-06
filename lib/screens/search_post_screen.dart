@@ -71,7 +71,7 @@ class _SearchPostScreen extends State<SearchPostScreen> {
                 itemCount: newsPost == null ? 0 : newsPost.length,
                 itemBuilder: (BuildContext context, int index) {
                   return NewsCard(
-                    "${newsPost[index]["_id"]}",
+                    "${newsPost[index]["_id"] == "" ? newsPost[index]["id"] : newsPost[index]["_id"]}",
                     "${newsPost[index]["image"]}",
                     "${newsPost[index]["publishedAt"]}",
                     "${newsPost[index]["siteID"]}",

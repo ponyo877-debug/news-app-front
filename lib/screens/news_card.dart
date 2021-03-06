@@ -3,9 +3,8 @@ import 'webview.dart';
 import 'package:http/http.dart' as http;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:async';
-import 'dart:io';
-import 'package:path_provider/path_provider.dart';
-import 'dart:convert';
+import 'package:hive/hive.dart';
+import 'models/history_model.dart';
 
 class NewsCard extends StatelessWidget {
   final String _id;
@@ -16,39 +15,13 @@ class NewsCard extends StatelessWidget {
   final String titles;
   final String url;
   static const String placeholderImg = 'assets/images/no_image_square.jpg';
-  static const String kFileName = 'myHistoryMod.json';
 
   NewsCard(
       this._id, this.image, this.publishedAt, this.siteID, this.sitetitle, this.titles, this.url);
 
-  bool _fileExists = false;
-  File _filePath;
-  List _json = [];
-  String _jsonString;
-
-  Future<String> get _localPath async {
-    final directory = await getApplicationDocumentsDirectory();
-    return directory.path;
-  }
-
-  Future<File> get _localFile async {
-    final path = await _localPath;
-    return File('$path/$kFileName');
-  }
-
-  void _writeJson(Map<String, dynamic> _newJson) async {
-    _filePath = await _localFile;
-    _fileExists = await _filePath.exists();
-
-    if (!_fileExists) {
-      _filePath.writeAsString('');
-    } else {
-      _jsonString = await _filePath.readAsString();
-      _json = json.decode(_jsonString);
-    }
-    _json.add(_newJson);
-    _jsonString = json.encode(_json);
-    _filePath.writeAsString(_jsonString);
+  Future _addHistory(HistoryModel historyModel) async {
+    final historyBox = await Hive.openBox<HistoryModel>('history');
+    historyBox.add(historyModel);
   }
 
   @override
@@ -68,17 +41,9 @@ class NewsCard extends StatelessWidget {
                     subtitle(sitetitle, Colors.red[200]),
                   ]),
               onTap: () {
-                var _newJson = {
-                  "_id":          this._id,
-                  "image":        this.image,
-                  "publishedAt":  this.publishedAt,
-                  "siteID":       this.siteID,
-                  "sitetitle":    this.sitetitle,
-                  "titles":       this.titles,
-                  "url":          this.url,
-                };
+                final newHistory = HistoryModel(_id, image, publishedAt, siteID, sitetitle, titles, url); // int.parse(_age));
+                _addHistory(newHistory);
                 _incrViewCount(_id);
-                _writeJson(_newJson);
                 Navigator.of(context).push(MaterialPageRoute(
                     builder: (BuildContext context) => MatomeWebView(
                           title: titles,

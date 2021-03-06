@@ -39,7 +39,7 @@ class _RankingPostScreen extends State<RankingPostScreen>
           itemBuilder: (BuildContext context, int index) {
             // "${index + 1}",
             return NewsRankingCard(
-              "${newsPost[index]["_id"]}",
+              "${newsPost[index]["_id"] == "" ? newsPost[index]["id"] : newsPost[index]["_id"]}",
               "${index + 1}",
               "${newsPost[index]["publishedAt"]}",
               "${newsPost[index]["siteID"]}",
