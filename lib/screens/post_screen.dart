@@ -60,13 +60,13 @@ class _PostScreen extends State<PostScreen> with AutomaticKeepAliveClientMixin {
               return null;
             }
             return NewsCard(
-              "${newsPost[index]["titles"]}",
-              "${newsPost[index]["publishedAt"]}",
-              "${newsPost[index]["sitetitle"]}",
-              "${newsPost[index]["image"]}",
-              "${newsPost[index]["url"]}",
-              // "${newsPost[index]["id"]}",
               "${newsPost[index]["_id"]}",
+              "${newsPost[index]["image"]}",
+              "${newsPost[index]["publishedAt"]}",
+              "${newsPost[index]["siteID"]}",
+              "${newsPost[index]["sitetitle"]}",
+              "${newsPost[index]["titles"]}",
+              "${newsPost[index]["url"]}",
             );
           },
         ),

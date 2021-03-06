@@ -18,7 +18,7 @@ class _HistoryPostScreen extends State<HistoryPostScreen>
   Map<String, dynamic> data;
   List newsPost = [];
   String baseURL = "http://gitouhon-juku-k8s2.ga";
-  static const String kFileName = 'myHistory.json';
+  static const String kFileName = 'myHistoryMod.json';
   bool _fileExists = false;
   File _filePath;
   List _json = [];
@@ -48,12 +48,13 @@ class _HistoryPostScreen extends State<HistoryPostScreen>
             print(_json.length);
             var revercedindex = _json.length - index - 1;
             return NewsCard(
-              "${_json[revercedindex]["name"]}",
-              "${_json[revercedindex]["publishedAt"]}",
-              "${_json[revercedindex]["sitetitle"]}",
+              "${_json[revercedindex]["_id"]}",
               "${_json[revercedindex]["image"]}",
+              "${_json[revercedindex]["publishedAt"]}",
+              "${_json[revercedindex]["siteID"]}",
+              "${_json[revercedindex]["sitetitle"]}",
+              "${_json[revercedindex]["titles"]}",
               "${_json[revercedindex]["url"]}",
-              "${_json[revercedindex]["id"]}",
             );
           },
         ),

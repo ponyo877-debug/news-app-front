@@ -8,17 +8,18 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:convert';
 
 class NewsCard extends StatelessWidget {
-  final String _image;
-  final String _name;
-  final String _date;
-  final String _site;
-  final String _url;
   final String _id;
+  final String image;
+  final String publishedAt;
+  final String siteID;
+  final String sitetitle;
+  final String titles;
+  final String url;
   static const String placeholderImg = 'assets/images/no_image_square.jpg';
-  static const String kFileName = 'myHistory.json';
+  static const String kFileName = 'myHistoryMod.json';
 
   NewsCard(
-      this._name, this._date, this._site, this._image, this._url, this._id);
+      this._id, this.image, this.publishedAt, this.siteID, this.sitetitle, this.titles, this.url);
 
   bool _fileExists = false;
   File _filePath;
@@ -58,29 +59,30 @@ class NewsCard extends StatelessWidget {
         children: <Widget>[
           new Container(
             child: ListTile(
-              leading: thumbnail(_image),
-              title: title(_name),
+              leading: thumbnail(image),
+              title: title(titles),
               subtitle: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
-                    subtitle(_date, Colors.white),
-                    subtitle(_site, Colors.red[200]),
+                    subtitle(publishedAt, Colors.white),
+                    subtitle(sitetitle, Colors.red[200]),
                   ]),
               onTap: () {
                 var _newJson = {
-                  "name": this._name,
-                  "publishedAt": this._date,
-                  "sitetitle": this._site,
-                  "image": this._image,
-                  "url": this._url,
-                  "id": this._id,
+                  "_id":          this._id,
+                  "image":        this.image,
+                  "publishedAt":  this.publishedAt,
+                  "siteID":       this.siteID,
+                  "sitetitle":    this.sitetitle,
+                  "titles":       this.titles,
+                  "url":          this.url,
                 };
                 _incrViewCount(_id);
                 _writeJson(_newJson);
                 Navigator.of(context).push(MaterialPageRoute(
                     builder: (BuildContext context) => MatomeWebView(
-                          title: _name,
-                          selectedUrl: _url,
+                          title: titles,
+                          selectedUrl: url,
                         )));
               },
             ),
@@ -133,9 +135,8 @@ class NewsCard extends StatelessWidget {
 }
 
 class NewsRankingCard extends NewsCard {
-  NewsRankingCard(String _name, String _date, String _site, String _image,
-      String _url, String _id)
-      : super(_name, _date, _site, _image, _url, _id);
+  NewsRankingCard(String _id, String image, String publishedAt, String siteID, String sitetitle, String titles, String url)
+      : super(_id, image, publishedAt, siteID, sitetitle, titles, url);
 
   @override
   thumbnail(title) {
