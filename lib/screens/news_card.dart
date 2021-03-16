@@ -6,18 +6,25 @@ import 'dart:async';
 import 'package:hive/hive.dart';
 import 'models/history_model.dart';
 
-class NewsCard extends StatelessWidget {
-  final String _id;
-  final String image;
-  final String publishedAt;
-  final String siteID;
-  final String sitetitle;
-  final String titles;
-  final String url;
+class NewsCard extends StatefulWidget {
+  String _id;
+  String image;
+  String publishedAt;
+  String siteID;
+  String sitetitle;
+  String titles;
+  String url;
+  bool colorChange = true;
   static const String placeholderImg = 'assets/images/no_image_square.jpg';
 
   NewsCard(
       this._id, this.image, this.publishedAt, this.siteID, this.sitetitle, this.titles, this.url);
+
+  @override
+  _NewsCard createState() => _NewsCard();
+}
+
+class _NewsCard extends State<NewsCard>{
 
   Future _addHistory(HistoryModel historyModel) async {
     final historyBox = await Hive.openBox<HistoryModel>('history');
@@ -32,23 +39,25 @@ class NewsCard extends StatelessWidget {
         children: <Widget>[
           new Container(
             child: ListTile(
-              leading: thumbnail(image),
-              title: title(titles),
+              leading: thumbnail(widget.image),
+              title: title(widget.titles, widget.colorChange?Colors.white:Colors.grey),
               subtitle: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
-                    subtitle(publishedAt, Colors.white),
-                    subtitle(sitetitle, Colors.red[200]),
+                    subtitle(widget.publishedAt, widget.colorChange?Colors.white:Colors.grey),
+                    subtitle(widget.sitetitle, widget.colorChange?Colors.red[200]:Colors.grey),
                   ]),
               onTap: () {
-                final newHistory = HistoryModel(_id, image, publishedAt, siteID, sitetitle, titles, url); // int.parse(_age));
+                final newHistory = HistoryModel
+                  (widget._id, widget.image, widget.publishedAt, widget.siteID, widget.sitetitle, widget.titles, widget.url); // int.parse(_age));
                 _addHistory(newHistory);
-                _incrViewCount(_id);
+                _incrViewCount(widget._id);
+                setState(() => widget.colorChange = false);
                 Navigator.of(context).push(MaterialPageRoute(
                     builder: (BuildContext context) => MatomeWebView(
-                          title: titles,
-                          selectedUrl: url,
-                        )));
+                      title: widget.titles,
+                      selectedUrl: widget.url,
+                    )));
               },
             ),
           ),
@@ -57,10 +66,10 @@ class NewsCard extends StatelessWidget {
     );
   }
 
-  title(title) {
+  title(title, color) {
     return Text(
       title,
-      style: TextStyle(fontSize: 15.0, fontWeight: FontWeight.w500),
+      style: TextStyle(fontSize: 15.0, color: color, fontWeight: FontWeight.w500),
       maxLines: 3,
       overflow: TextOverflow.ellipsis,
     );
@@ -70,7 +79,7 @@ class NewsCard extends StatelessWidget {
     return Text(
       subTitle,
       style:
-          TextStyle(fontSize: 12.5, color: color, fontWeight: FontWeight.w100),
+      TextStyle(fontSize: 12.5, color: color, fontWeight: FontWeight.w100),
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
     );
