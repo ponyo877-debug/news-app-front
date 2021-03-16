@@ -22,6 +22,7 @@ class _PostScreen extends State<PostScreen> with AutomaticKeepAliveClientMixin {
 
   Map<String, dynamic> data;
   List newsPost = [];
+  String lastpublished = "";
   int updateCount = 0;
   String baseURL = "http://gitouhon-juku-k8s2.ga";
 
@@ -82,12 +83,14 @@ class _PostScreen extends State<PostScreen> with AutomaticKeepAliveClientMixin {
     if (_fileExists) {
       _skipIDs = await _filePath.readAsString();
     }
-    var getPostURL = baseURL + "/mongo/old" + "?skipIDs=" + _skipIDs;
+    var getPostURL = baseURL + "/mongo/get" + "?skipIDs=" + _skipIDs;
     http.Response response = await http.get(getPostURL);
     data = json.decode(response.body);
     if (mounted) {
       setState(() {
         newsPost = data["data"];
+        lastpublished = data["lastpublished"];
+        // print("lastpublished: " + lastpublished);
       });
     }
   }
@@ -100,12 +103,14 @@ class _PostScreen extends State<PostScreen> with AutomaticKeepAliveClientMixin {
     if (_fileExists) {
       _skipIDs = await _filePath.readAsString();
     }
-    var getPostURL = baseURL + "/mongo/old?from=" + fromPostNum.toString() + "&skipIDs=" + _skipIDs;
+    var getPostURL = baseURL + "/mongo/get?lastpublished=" + lastpublished + "&skipIDs=" + _skipIDs;
     http.Response response = await http.get(getPostURL);
     data = json.decode(response.body);
     if (mounted) {
       setState(() {
         newsPost.addAll(data["data"]);
+        lastpublished = data["lastpublished"];
+        // print("lastpublished: " + lastpublished);
       });
     }
   }
