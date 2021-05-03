@@ -1,127 +1,155 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'news_card.dart';
-import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
-import 'package:path_provider/path_provider.dart';
-
-class PostScreen extends StatefulWidget {
-  PostScreen();
-
-  @override
-  _PostScreen createState() => _PostScreen();
-}
+import 'news_state.dart';
 
 // https://qiita.com/taki4227/items/e3c7e640b7986a80b2f9
 // https://qiita.com/najeira/items/454462c794c35b3b600a
-class _PostScreen extends State<PostScreen> with AutomaticKeepAliveClientMixin {
-  static const String kFileName = 'mySkipIDs.csv';
-  File _filePath;
-  bool _fileExists = false;
+class PostScreen extends StatelessWidget {
+  // @override
+  // bool get wantKeepAlive => true;
 
-  Map<String, dynamic> data;
-  List newsPost = [];
-  String lastpublished = "";
-  int updateCount = 0;
-  String baseURL = "http://gitouhon-juku-k8s2.ga";
-
-  @override
-  bool get wantKeepAlive => true;
-
-  @override
-  void initState() {
-    super.initState();
-    _getInitPost();
-  }
+  final _kTabs = [
+    //Tab(icon: Icon(Icons.fiber_new), text: 'Latest News'),
+    //Tab(icon: Icon(Icons.recommend), text: 'Recommended News'),
+    Center (child: Icon(Icons.fiber_new, size: 30)),
+    Center (child: Row (children: [Icon(Icons.recommend, size: 30), SizedBox(width:10), Text("for You")], mainAxisAlignment: MainAxisAlignment.center)),
+  ];
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: RefreshIndicator(
-        onRefresh: () async {
-          updateCount = 0;
-          await _getInitPost();
-        },
-        child: ListView.builder(
-          physics: AlwaysScrollableScrollPhysics(),
-          itemBuilder: (BuildContext context, int index) {
-            if (index == newsPost.length) {
-              updateCount++;
-              _getPost(updateCount);
-              return new Center(
-                child: new Container(
-                  margin: const EdgeInsets.only(top: 8.0),
-                  width: 32.0,
-                  height: 32.0,
-                  child: const CircularProgressIndicator(),
-                ),
-              );
-            } else if (index > newsPost.length) {
-              return null;
-            }
-            return NewsCard(
-              "${newsPost[index]["_id"]}",
-              "${newsPost[index]["image"]}",
-              "${newsPost[index]["publishedAt"]}",
-              "${newsPost[index]["siteID"]}",
-              "${newsPost[index]["sitetitle"]}",
-              "${newsPost[index]["titles"]}",
-              "${newsPost[index]["url"]}",
-            );
-          },
-        ),
-      ),
+    //print(context.runtimeType);
+
+    return DefaultTabController(
+        length: 2,
+        initialIndex: 1,
+        child: Scaffold(
+          appBar:TabBar(
+            //unselectedLabelColor: Colors.redAccent,
+            indicatorSize: TabBarIndicatorSize.label,
+            indicator: BoxDecoration(
+                borderRadius: BorderRadius.circular(50),
+                color: Colors.blueGrey),
+            labelStyle: TextStyle (fontSize: 20),
+            tabs: _kTabs,
+            ),
+      body: TabBarView(
+            children: <Widget>[
+              Center(
+                child: LatestScreen(),
+              ),
+              Center(
+                child: RecommendedScreen(),
+              ),
+            ],
+          ),
+    ),
     );
   }
+}
 
-  // https://qiita.com/kenichiro-yamato/items/12d7199cb2d7812ac0ce
-  Future _getInitPost() async {
-    _filePath = await _localFile;
-    _fileExists = await _filePath.exists();
-    var _skipIDs = "";
-    if (_fileExists) {
-      _skipIDs = await _filePath.readAsString();
-    }
-    var getPostURL = baseURL + "/mongo/get" + "?skipIDs=" + _skipIDs;
-    http.Response response = await http.get(getPostURL);
-    data = json.decode(response.body);
-    if (mounted) {
-      setState(() {
-        newsPost = data["data"];
-        lastpublished = data["lastpublished"];
-        // print("lastpublished: " + lastpublished);
-      });
-    }
+
+class LatestScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    //print(context.runtimeType);
+
+    return RefreshIndicator(
+        onRefresh: () async {
+      context.read(newsProvider.notifier).getPost(true);
+    },
+    child: Consumer(builder: (context, watch, _) {
+            //print(context.runtimeType);
+            final list = watch(newsProvider);
+            Widget childWidget;
+            if (list.length == 0) {
+              childWidget = Center(child: CircularProgressIndicator());
+            } else {
+              childWidget = ListView.builder(
+                physics: AlwaysScrollableScrollPhysics(),
+                itemBuilder: (BuildContext context, int index) {
+                  if (index == list.length) {
+                    //print(list);
+                    context.read(newsProvider.notifier).getPost(false);
+                    return new Center(
+                      child: new Container(
+                        margin: const EdgeInsets.only(top: 8.0),
+                        width: 32.0,
+                        height: 32.0,
+                        child: const CircularProgressIndicator(),
+                      ),
+                    );
+                  } else if (index > list.length) {
+                    return null;
+                  }
+                  return NewsCard(
+                    "${list[index]["_id"]}",
+                    "${list[index]["image"]}",
+                    "${list[index]["publishedAt"]}",
+                    "${list[index]["siteID"]}",
+                    "${list[index]["sitetitle"]}",
+                    "${list[index]["titles"]}",
+                    "${list[index]["url"]}",
+                    list[index]["readFlg"],
+                  );
+                },
+              );
+            }
+            return childWidget;
+          }),
+    );
   }
+}
 
-  Future _getPost(int updateCount) async {
-    int fromPostNum = 15 * updateCount;
-    _filePath = await _localFile;
-    _fileExists = await _filePath.exists();
-    var _skipIDs = "";
-    if (_fileExists) {
-      _skipIDs = await _filePath.readAsString();
-    }
-    var getPostURL = baseURL + "/mongo/get?lastpublished=" + lastpublished + "&skipIDs=" + _skipIDs;
-    http.Response response = await http.get(getPostURL);
-    data = json.decode(response.body);
-    if (mounted) {
-      setState(() {
-        newsPost.addAll(data["data"]);
-        lastpublished = data["lastpublished"];
-        // print("lastpublished: " + lastpublished);
-      });
-    }
-  }
 
-  Future<String> get _localPath async {
-    final directory = await getApplicationDocumentsDirectory();
-    return directory.path;
-  }
+class RecommendedScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    //print(context.runtimeType);
 
-  Future<File> get _localFile async {
-    final path = await _localPath;
-    return File('$path/$kFileName');
+    return RefreshIndicator(
+      onRefresh: () async {
+        context.read(recommendedProvider.notifier).getPost(true);
+      },
+      child: Consumer(builder: (context, watch, _) {
+        //print(context.runtimeType);
+        final list = watch(recommendedProvider);
+        Widget childWidget;
+        if (list.length == 0) {
+          childWidget = Center(child: CircularProgressIndicator());
+        } else {
+          childWidget = ListView.builder(
+            physics: AlwaysScrollableScrollPhysics(),
+            itemBuilder: (BuildContext context, int index) {
+              if (index == list.length) {
+                //print(list);
+                context.read(recommendedProvider.notifier).getPost(false);
+                return new Center(
+                  child: new Container(
+                    margin: const EdgeInsets.only(top: 8.0),
+                    width: 32.0,
+                    height: 32.0,
+                    child: const CircularProgressIndicator(),
+                  ),
+                );
+              } else if (index > list.length) {
+                return null;
+              }
+              return NewsCard(
+                "${list[index]["_id"]}",
+                "${list[index]["image"]}",
+                "${list[index]["publishedAt"]}",
+                "${list[index]["siteID"]}",
+                "${list[index]["sitetitle"]}",
+                "${list[index]["titles"]}",
+                "${list[index]["url"]}",
+                list[index]["readFlg"],
+              );
+            },
+          );
+        }
+        return childWidget;
+      }),
+    );
   }
 }

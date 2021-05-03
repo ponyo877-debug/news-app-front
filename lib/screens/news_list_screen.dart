@@ -6,12 +6,6 @@ import 'history_post_screen.dart';
 import 'setting_screen.dart';
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 
-
-class NewsListScreen extends StatefulWidget {
-  @override
-  _NewsListScreenState createState() => _NewsListScreenState();
-}
-
 class TabInfo {
   IconData icon;
   String title;
@@ -19,10 +13,11 @@ class TabInfo {
   TabInfo(this.icon, this.title, this.widget);
 }
 
-class _NewsListScreenState extends State<NewsListScreen>{
-    //with TickerProviderStateMixin {
+class NewsListScreen extends StatelessWidget {
+  //with TickerProviderStateMixin {
   //TabController _tabController;
-  Map<String, dynamic> data;
+
+  //final Map<String, dynamic> data;
 
   final List<TabInfo> _tabs = [
     TabInfo(Icons.format_list_numbered, 'Ranking', RankingPostScreen()),
@@ -33,27 +28,14 @@ class _NewsListScreenState extends State<NewsListScreen>{
   ];
 
   @override
-  void initState() {
-    super.initState();
-    //_tabController = TabController(length: _tabs.length, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    //_tabController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 5,
       initialIndex: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: Text("まとめくん"),
+          title: Text("😁まとめくん😁"),
           centerTitle: true,
-          //backgroundColor: Colors.blueGrey,
         ),
         bottomNavigationBar: SafeArea(
           child: ConvexAppBar(
@@ -65,15 +47,36 @@ class _NewsListScreenState extends State<NewsListScreen>{
               for (final entry in _tabs)
                 TabItem(icon: entry.icon, title: entry.title),
             ],
-            //initialActiveIndex: 2,
-            //onTap: (int i) => print('click index=$i'),
           ),
         ),
-        body: TabBarView(
-          // physics: NeverScrollableScrollPhysics(),
-          //controller: _tabController,
-          children: _tabs.map((tab) => tab.widget).toList(),
-        )),
+        body: SafeArea(
+          child: TabBarView(
+            children: _tabs.map((tab) => tab.widget).toList(),
+          ),
+        ),
+        // TODO: Need to implement hidden AppBar
+        // body: SafeArea(
+        //   child: extended.NestedScrollView(
+        //     headerSliverBuilder:
+        //     (BuildContext context, bool innerBoxIsScrolled) {
+        //       return <Widget>[
+        //         SliverOverlapAbsorber(
+        //           handle:
+        //           extended.NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+        //           sliver: SliverAppBar(
+        //             title: const Center(child: Text("😁まとめくん😁")),
+        //             pinned: false,
+        //             forceElevated: innerBoxIsScrolled,
+        //           ),
+        //         ),
+        //       ];
+        //     },
+        //     body: TabBarView(
+        //       children: _tabs.map((tab) => tab.widget).toList(),
+        //     ),
+        //   ),
+        // ),
+      ),
     );
   }
 }

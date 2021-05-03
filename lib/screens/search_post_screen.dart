@@ -3,6 +3,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'news_card.dart';
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
+import 'models/history_model.dart';
 
 class SearchPostScreen extends StatefulWidget {
   @override
@@ -15,6 +17,9 @@ class _SearchPostScreen extends State<SearchPostScreen> {
   Map<String, dynamic> data;
   String baseURL = "http://gitouhon-juku-k8s2.ga";
   List newsPost = [];
+
+  Box historyBox;
+  Future<dynamic> _future;
 
   @override
   void initState() {
@@ -32,24 +37,48 @@ class _SearchPostScreen extends State<SearchPostScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _future = null;
     searchResultsList();
   }
 
   _onSearchChanged() {
+    _future = null;
     searchResultsList();
   }
 
   Future searchResultsList() async {
     String searchwords = _searchController.text;
     var getPostURL = baseURL + "/elastic/get?words=" + searchwords;
-    debugPrint(getPostURL);
+    print(getPostURL);
     http.Response response = await http.get(getPostURL);
     data = json.decode(response.body);
     if (mounted) {
       setState(() {
         newsPost = data["data"];
+        if (newsPost != null) {
+          _future = _initReadFlg();
+        }
       });
     }
+  }
+
+  Future _initReadFlg() async {
+    //if (historyBox == null) {
+    historyBox = await Hive.openBox<HistoryModel>('history');
+    //}
+    for (int i = 0; i < newsPost.length; i++) {
+      if (newsPost[i]["readFlg"] == null) {
+        var check = historyBox.values.firstWhere(
+            (list) => list.id == newsPost[i]["_id"],
+            orElse: () => null);
+        if (check == null) {
+          newsPost[i]["readFlg"] = false;
+        } else {
+          newsPost[i]["readFlg"] = true;
+        }
+      }
+    }
+    return true;
   }
 
   Widget build(BuildContext context) {
@@ -66,22 +95,35 @@ class _SearchPostScreen extends State<SearchPostScreen> {
               ),
             ),
             Expanded(
-              child: ListView.builder(
-                // physics: AlwaysScrollableScrollPhysics(),
-                itemCount: newsPost == null ? 0 : newsPost.length,
-                itemBuilder: (BuildContext context, int index) {
-                  return NewsCard(
-                    "${newsPost[index]["_id"] == "" ? newsPost[index]["id"] : newsPost[index]["_id"]}",
-                    "${newsPost[index]["image"]}",
-                    "${newsPost[index]["publishedAt"]}",
-                    "${newsPost[index]["siteID"]}",
-                    "${newsPost[index]["sitetitle"]}",
-                    "${newsPost[index]["titles"]}",
-                    "${newsPost[index]["url"]}",
-                  );
-                },
-              ),
-            ),
+                child: FutureBuilder(
+                    future: _future,
+                    builder: (BuildContext context, AsyncSnapshot snapshot) {
+                      Widget childWidget;
+                      if (newsPost == null) {
+                        childWidget = Container();
+                      } else if (!snapshot.hasData) {
+                        childWidget =
+                            Center(child: CircularProgressIndicator());
+                      } else {
+                        childWidget = ListView.builder(
+                          // physics: AlwaysScrollableScrollPhysics(),
+                          itemCount: newsPost == null ? 0 : newsPost.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            return NewsCard(
+                              "${newsPost[index]["_id"] == "" ? newsPost[index]["id"] : newsPost[index]["_id"]}",
+                              "${newsPost[index]["image"]}",
+                              "${newsPost[index]["publishedAt"]}",
+                              "${newsPost[index]["siteID"]}",
+                              "${newsPost[index]["sitetitle"]}",
+                              "${newsPost[index]["titles"]}",
+                              "${newsPost[index]["url"]}",
+                              newsPost[index]["readFlg"],
+                            );
+                          },
+                        );
+                      }
+                      return childWidget;
+                    })),
           ],
         ),
       ),

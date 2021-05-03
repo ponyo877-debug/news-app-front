@@ -5,8 +5,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:async';
 import 'package:hive/hive.dart';
 import 'models/history_model.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'news_state.dart';
 
-class NewsCard extends StatefulWidget {
+class NewsCard extends StatelessWidget {
   String _id;
   String image;
   String publishedAt;
@@ -14,17 +16,12 @@ class NewsCard extends StatefulWidget {
   String sitetitle;
   String titles;
   String url;
-  bool colorChange = true;
+  //bool colorChange = true;
+  bool readFlg = false;
   static const String placeholderImg = 'assets/images/no_image_square.jpg';
 
-  NewsCard(
-      this._id, this.image, this.publishedAt, this.siteID, this.sitetitle, this.titles, this.url);
-
-  @override
-  _NewsCard createState() => _NewsCard();
-}
-
-class _NewsCard extends State<NewsCard>{
+  NewsCard(this._id, this.image, this.publishedAt, this.siteID, this.sitetitle,
+      this.titles, this.url, this.readFlg);
 
   Future _addHistory(HistoryModel historyModel) async {
     final historyBox = await Hive.openBox<HistoryModel>('history');
@@ -33,31 +30,67 @@ class _NewsCard extends State<NewsCard>{
 
   @override
   Widget build(BuildContext context) {
+    //bloc = NewsBlocProvider.of(context).bloc;
     return Card(
       child: Column(
         mainAxisSize: MainAxisSize.max,
         children: <Widget>[
           new Container(
             child: ListTile(
-              leading: thumbnail(widget.image),
-              title: title(widget.titles, widget.colorChange?Colors.white:Colors.grey),
-              subtitle: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              leading: thumbnail(this.image),
+              title: title(this.titles,
+                  this.readFlg ? Colors.grey : Colors.white, this.readFlg),
+              subtitle: Wrap(
+                  // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  alignment: WrapAlignment.spaceBetween,
+                  verticalDirection: VerticalDirection.up,
                   children: <Widget>[
-                    subtitle(widget.publishedAt, widget.colorChange?Colors.white:Colors.grey),
-                    subtitle(widget.sitetitle, widget.colorChange?Colors.red[200]:Colors.grey),
+                    subtitle(this.publishedAt,
+                        this.readFlg ? Colors.grey : Colors.white),
+                    subtitle(this.sitetitle,
+                        this.readFlg ? Colors.grey : Colors.red[200]),
                   ]),
+              // TODO: Need to implement favorite button
+              // trailing: widget.publishedAt != ""
+              //     ? IconButton(
+              //         icon: Icon(Icons.favorite_border),
+              //         onPressed: () {
+              //           print('Push ${widget._id}\'s Favorite Button!');
+              //           final newfavorite = HistoryModel(
+              //               widget._id,
+              //               widget.image,
+              //               widget.publishedAt,
+              //               widget.siteID,
+              //               widget.sitetitle,
+              //               widget.titles,
+              //               widget.url);
+              //           _addFavorite(newfavorite);
+              //         },
+              //       )
+              //     : null,
               onTap: () {
-                final newHistory = HistoryModel
-                  (widget._id, widget.image, widget.publishedAt, widget.siteID, widget.sitetitle, widget.titles, widget.url); // int.parse(_age));
+                final newHistory = HistoryModel(
+                  _id,
+                  image,
+                  publishedAt,
+                  siteID,
+                  sitetitle,
+                  titles,
+                  url,
+                ); // int.parse(_age));
                 _addHistory(newHistory);
-                _incrViewCount(widget._id);
-                setState(() => widget.colorChange = false);
+                context.read(newsProvider.notifier).changeOneLatest(_id);
+                context.read(rankingProvider.notifier).changeOneLatest(_id);
+                context.read(historyProvider.notifier).addHistory(newHistory);
+                _incrViewCount(_id);
+
                 Navigator.of(context).push(MaterialPageRoute(
                     builder: (BuildContext context) => MatomeWebView(
-                      title: widget.titles,
-                      selectedUrl: widget.url,
-                    )));
+                          title: titles,
+                          postID: _id,
+                          selectedUrl: url,
+                          siteID: siteID,
+                        )));
               },
             ),
           ),
@@ -66,10 +99,13 @@ class _NewsCard extends State<NewsCard>{
     );
   }
 
-  title(title, color) {
+  title(title, color, readFlg) {
     return Text(
       title,
-      style: TextStyle(fontSize: 15.0, color: color, fontWeight: FontWeight.w500),
+      style: TextStyle(
+          fontSize: 15.0,
+          color: color,
+          fontWeight: readFlg ? FontWeight.w100 : FontWeight.w500),
       maxLines: 3,
       overflow: TextOverflow.ellipsis,
     );
@@ -79,26 +115,32 @@ class _NewsCard extends State<NewsCard>{
     return Text(
       subTitle,
       style:
-      TextStyle(fontSize: 12.5, color: color, fontWeight: FontWeight.w100),
+          TextStyle(fontSize: 12.5, color: color, fontWeight: FontWeight.w100),
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
     );
   }
 
   thumbnail(imageUrl) {
-    return Padding(
-      padding: EdgeInsets.only(left: 15.0),
-      child: CachedNetworkImage(
-        imageUrl: imageUrl,
-        placeholder: (context, url) => Icon(Icons.error),
-        //=> Image.asset(placeholderImg),
-        errorWidget: (context, url, error) => Icon(Icons.error),
-        // errorImage
-        height: 50,
-        width: 50,
-        alignment: Alignment.center,
-        fit: BoxFit.fill,
+    return CachedNetworkImage(
+      imageUrl: imageUrl,
+      imageBuilder: (context, imageProvider) => Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: imageProvider,
+            fit: BoxFit.cover,
+          ),
+          // border: Border.all(color: Colors.white, width: 3),
+          borderRadius: BorderRadius.circular(10),
+        ),
       ),
+      placeholder: (context, url) => Icon(Icons.error),
+      errorWidget: (context, url, error) => Icon(Icons.error),
+      // errorImage
+      height: 60,
+      width: 60,
+      alignment: Alignment.center,
+      // fit: BoxFit.cover,
     );
   }
 
@@ -109,16 +151,87 @@ class _NewsCard extends State<NewsCard>{
 }
 
 class NewsRankingCard extends NewsCard {
-  NewsRankingCard(String _id, String image, String publishedAt, String siteID, String sitetitle, String titles, String url)
-      : super(_id, image, publishedAt, siteID, sitetitle, titles, url);
+  NewsRankingCard(String _id, String image, String publishedAt, String siteID,
+      String sitetitle, String titles, String url, bool readFlg)
+      : super(_id, image, publishedAt, siteID, sitetitle, titles, url, readFlg);
 
   @override
-  thumbnail(title) {
+  thumbnail(rank) {
     return Text(
-      title,
+      rank,
       style: TextStyle(fontSize: 30.0, fontWeight: FontWeight.w500),
       maxLines: 2,
       overflow: TextOverflow.ellipsis,
+    );
+  }
+}
+
+class NewsHistoryCard extends NewsCard {
+  NewsHistoryCard(String _id, String image, String publishedAt, String siteID,
+      String sitetitle, String titles, String url, bool readFlg)
+      : super(_id, image, publishedAt, siteID, sitetitle, titles, url, readFlg);
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Column(
+        mainAxisSize: MainAxisSize.max,
+        children: <Widget>[
+          new Container(
+            child: ListTile(
+              leading: thumbnail(this.image),
+              title: title(this.titles, Colors.white, false),
+              subtitle: Wrap(
+                  // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  alignment: WrapAlignment.spaceBetween,
+                  verticalDirection: VerticalDirection.up,
+                  children: <Widget>[
+                    subtitle(this.publishedAt, Colors.white),
+                    subtitle(this.sitetitle, Colors.red[200]),
+                  ]),
+              // TODO: Need to implement favorite button
+              // trailing: widget.publishedAt != ""
+              //     ? IconButton(
+              //         icon: Icon(Icons.favorite_border),
+              //         onPressed: () {
+              //           print('Push ${widget._id}\'s Favorite Button!');
+              //           final newfavorite = HistoryModel(
+              //               widget._id,
+              //               widget.image,
+              //               widget.publishedAt,
+              //               widget.siteID,
+              //               widget.sitetitle,
+              //               widget.titles,
+              //               widget.url);
+              //           _addFavorite(newfavorite);
+              //         },
+              //       )
+              //     : null,
+              onTap: () {
+                final newHistory = HistoryModel(
+                  this._id,
+                  this.image,
+                  this.publishedAt,
+                  this.siteID,
+                  this.sitetitle,
+                  this.titles,
+                  this.url,
+                ); // int.parse(_age));
+                _addHistory(newHistory);
+                _incrViewCount(this._id);
+
+                Navigator.of(context).push(MaterialPageRoute(
+                    builder: (BuildContext context) => MatomeWebView(
+                          title: titles,
+                          postID: _id,
+                          selectedUrl: url,
+                          siteID: siteID,
+                        )));
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
