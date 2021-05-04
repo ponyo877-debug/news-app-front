@@ -26,20 +26,16 @@ class SettingScreen extends StatelessWidget {
       SettingInfo(
           Icons.email_outlined,
           'Contact Us',
-          MatomeWebView(
+          NormalWebView(
             title: "Contact Us",
-            postID: "None",
             selectedUrl: _settingScreen._contactURL,
-            siteID: "None",
           )),
       SettingInfo(
           Icons.privacy_tip_outlined,
           'Privacy Policy',
-          MatomeWebView(
+          NormalWebView(
             title: "Privacy Policy",
-            postID: "None",
             selectedUrl: _settingScreen._PPURL,
-            siteID: "None",
           )),
     ];
     return _settingScreen;

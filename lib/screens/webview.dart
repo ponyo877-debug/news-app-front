@@ -143,9 +143,9 @@ class _MatomeWebView extends State<MatomeWebView> {
     }
 
     var modifiedHtml = Uri.dataFromString(
-        doc.head.outerHtml + doc.body.outerHtml,
-        mimeType: 'text/html',
-        encoding: Encoding.getByName('UTF-8'))
+            doc.head.outerHtml + doc.body.outerHtml,
+            mimeType: 'text/html',
+            encoding: Encoding.getByName('UTF-8'))
         .toString();
     return modifiedHtml;
   }
@@ -208,7 +208,7 @@ class _MatomeWebView extends State<MatomeWebView> {
         } else {
           print('Push Bolt Button!');
           Scaffold.of(context).showBottomSheet<void>(
-                (BuildContext context) {
+            (BuildContext context) {
               return Container(
                   height: MediaQuery.of(context).size.height * 0.15,
                   child: ListView.builder(
@@ -219,16 +219,15 @@ class _MatomeWebView extends State<MatomeWebView> {
                       return Container(
                         width: MediaQuery.of(context).size.width * 0.6,
                         child: NewsCard(
-                          "${recomPost[index]["_id"]}",
-                          "${recomPost[index]["image"]}",
-                          "",
-                          // "${recomPost[index]["publishedAt"]}",
-                          "${recomPost[index]["siteID"]}",
-                          "${recomPost[index]["sitetitle"]}",
-                          "${recomPost[index]["titles"]}",
-                          "${recomPost[index]["url"]}",
-                          false
-                        ),
+                            "${recomPost[index]["_id"]}",
+                            "${recomPost[index]["image"]}",
+                            "",
+                            // "${recomPost[index]["publishedAt"]}",
+                            "${recomPost[index]["siteID"]}",
+                            "${recomPost[index]["sitetitle"]}",
+                            "${recomPost[index]["titles"]}",
+                            "${recomPost[index]["url"]}",
+                            false),
                       );
                     },
                   ));
@@ -307,7 +306,7 @@ class _MatomeWebView extends State<MatomeWebView> {
     // int response_length = response.bodyBytes.length;
     // String decoded = await CharsetConverter.decode("UTF-8", response.bodyBytes);
     String decoded =
-    Utf8Decoder(allowMalformed: true).convert(response.bodyBytes);
+        Utf8Decoder(allowMalformed: true).convert(response.bodyBytes);
 
     if (response.statusCode == 200) {
       var _headers = response.headers['content-type'].split('charset=');
@@ -325,7 +324,7 @@ class _MatomeWebView extends State<MatomeWebView> {
       //if (livedoorhosts.contains(hostName)) {
       if (notLiveDoorIDs.contains(widget.siteID)) {
         modifiedHtml = Uri.dataFromString(decoded,
-            mimeType: 'text/html', encoding: Encoding.getByName('UTF-8'))
+                mimeType: 'text/html', encoding: Encoding.getByName('UTF-8'))
             .toString();
       } else {
         modifiedHtml = await arrangeforLivedoorBlog(parse(decoded));
@@ -356,12 +355,45 @@ class _MatomeWebView extends State<MatomeWebView> {
       }
       // print("headers: ${_headers.length}");
       String decoded =
-      Utf8Decoder(allowMalformed: true).convert(response.bodyBytes);
+          Utf8Decoder(allowMalformed: true).convert(response.bodyBytes);
       // print("_decode_charset: ${_decode_charset}");
       // print("response.bodyBytes: ${response.bodyBytes}");
       return parse(decoded);
     } else {
       throw Exception();
     }
+  }
+}
+
+class NormalWebView extends StatefulWidget {
+  final String title;
+  final String selectedUrl;
+
+  NormalWebView({Key key, this.title, this.selectedUrl}) : super(key: key);
+
+  @override
+  _NormalWebView createState() => _NormalWebView();
+}
+
+class _NormalWebView extends State<NormalWebView> {
+  final Completer<WebViewController> _controller =
+  Completer<WebViewController>();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.title),
+      ),
+      body: Builder(builder: (BuildContext context) {
+        return WebView(
+          initialUrl: widget.selectedUrl,
+          javascriptMode: JavascriptMode.unrestricted,
+          onWebViewCreated: (WebViewController webViewController) {
+            _controller.complete(webViewController);
+          },
+        );
+      }),
+    );
   }
 }
