@@ -139,9 +139,30 @@ class NewsState extends StateNotifier<List>  {
   }
 
   void getRecommended () async {
-    var getPostURL = baseURL + "/mongo/ranking";
+    historyBox = await Hive.openBox<HistoryModel>('history');
+    List<HistoryModel> historyItems = historyBox.values.toList();
+    int index = 0;
+    String ids = "";
+    for (var item in historyItems) {
+      if (ids == "") {
+        ids = item.id;
+      } else {
+        ids = ids + "," + item.id;
+      }
+      index++;
+      //直近閲覧した15の記事からレコメンドを作成
+      if (index >= 15) {
+        break;
+      }
+    }
+
+    var getPostURL = baseURL + "/personal?ids=" + ids;
     http.Response response = await http.get(getPostURL);
-    data = json.decode(response.body);
+    data = json
+        .decode(Utf8Decoder(allowMalformed: true).convert(response.bodyBytes));
+
+    //print("aaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+    //print(data);
 
     newsPost = data["data"];
     _initReadFlg();

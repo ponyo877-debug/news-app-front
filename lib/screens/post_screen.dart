@@ -109,7 +109,7 @@ class RecommendedScreen extends StatelessWidget {
 
     return RefreshIndicator(
       onRefresh: () async {
-        context.read(recommendedProvider.notifier).getPost(true);
+        context.read(recommendedProvider.notifier).getRecommended();
       },
       child: Consumer(builder: (context, watch, _) {
         //print(context.runtimeType);
