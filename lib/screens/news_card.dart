@@ -7,6 +7,7 @@ import 'package:hive/hive.dart';
 import 'models/history_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'news_state.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class NewsCard extends StatelessWidget {
   String _id;

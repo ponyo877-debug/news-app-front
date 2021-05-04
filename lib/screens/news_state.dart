@@ -14,17 +14,31 @@ final historyProvider = StateNotifierProvider((ref) => NewsState("history"));
 final rankingProvider = StateNotifierProvider((ref) => NewsState("ranking"));
 
 class NewsState extends StateNotifier<List>  {
-  //NewsState() : super([]);
+  // NewsState() : super([]);
   NewsState(String type) : super([]) {
-    if (type == "latest") {
-     this.getPost(true);
-    } else if (type == "history") {
-      this.initHistory();
-    } else if (type == "ranking") {
-      this.getRanking();
-    } else if (type == "recommended") {
-      this.getRecommended();
+    switch (type) {
+      case "latest":
+        this.getPost(true);
+        break;
+      case "history":
+        this.initHistory();
+        break;
+      case "ranking":
+        this.getRanking();
+        break;
+      case "recommended":
+        this.getRecommended();
+        break;
     }
+    // if (type == "latest") {
+    //  this.getPost(true);
+    // } else if (type == "history") {
+    //   this.initHistory();
+    // } else if (type == "ranking") {
+    //   this.getRanking();
+    // } else if (type == "recommended") {
+    //   this.getRecommended();
+    // }
   }
 
   static const String kFileName = 'mySkipIDs.csv';

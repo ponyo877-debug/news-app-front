@@ -42,6 +42,7 @@ dependencies:
   flutter_riverpod: ^0.14.0+1
   admob_flutter: ^1.0.1
   extended_nested_scroll_view: ^3.0.0
+  google_fonts: ^1.0.0
 
 flutter_icons:
   android: true

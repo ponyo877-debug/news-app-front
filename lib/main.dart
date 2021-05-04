@@ -35,6 +35,7 @@ class MyApp extends StatelessWidget {
           // ThemeData.dark(),
           brightness: Brightness.dark,
           // canvasColor: Colors.transparent,
+          fontFamily: 'M PLUS Rounded 1c',
           bottomSheetTheme: BottomSheetThemeData(
               backgroundColor: Colors.black.withOpacity(0))),
       home: NewsListScreen(),
