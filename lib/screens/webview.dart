@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'news_card.dart';
 
-import 'package:charset_converter/charset_converter.dart';
+// import 'package:charset_converter/charset_converter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_user_agent/flutter_user_agent.dart';
@@ -187,7 +187,7 @@ class _MatomeWebView extends State<MatomeWebView> {
           adSize: AdmobBannerSize(
             width: MediaQuery.of(context).size.width.toInt(),
             height: AdMobService().getHeight(context).toInt(),
-            name: 'BOTTOM_BANNER',
+            name: 'BANNER',
           ),
         ),
         floatingActionButton: Builder(
@@ -377,7 +377,7 @@ class NormalWebView extends StatefulWidget {
 
 class _NormalWebView extends State<NormalWebView> {
   final Completer<WebViewController> _controller =
-  Completer<WebViewController>();
+      Completer<WebViewController>();
 
   @override
   Widget build(BuildContext context) {
