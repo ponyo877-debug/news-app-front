@@ -5,15 +5,61 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'news_state.dart';
 
 class RankingPostScreen extends StatelessWidget {
+
+  final _kTabs = [
+    //Tab(icon: Icon(Icons.fiber_new), text: 'Latest News'),
+    //Tab(icon: Icon(Icons.recommend), text: 'Recommended News'),
+    Center(child: Text("Daily")),
+    Center(child: Text("Weekly")),
+    Center(child: Text("Monthly")),
+  ];
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        body: RefreshIndicator(
+    return DefaultTabController(
+      length: 3,
+      initialIndex: 0,
+      child: Scaffold(
+        appBar: TabBar(
+          //unselectedLabelColor: Colors.redAccent,
+          indicatorSize: TabBarIndicatorSize.label,
+          indicator: BoxDecoration(
+              borderRadius: BorderRadius.circular(50), color: Colors.blueGrey),
+          labelStyle: TextStyle(fontSize: 18),
+          tabs: _kTabs,
+        ),
+        body: TabBarView(
+          children: <Widget>[
+            Center(
+              child: EachRankingPostScreen(rankingDayProvider, "daily"),
+            ),
+            Center(
+              child: EachRankingPostScreen(rankingWeekProvider, "weekly"),
+            ),
+            Center(
+              child: EachRankingPostScreen(rankingMonthProvider,"monthly"),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+}
+
+class EachRankingPostScreen extends StatelessWidget {
+  EachRankingPostScreen(this.provider, this.type);
+  final String type;
+  final provider;
+
+  @override
+  Widget build(BuildContext context) {
+    return RefreshIndicator(
       onRefresh: () async {
-        context.read(rankingProvider.notifier).getRanking();
+        context.read(provider.notifier).getRanking(type);
       },
       child: Consumer(builder: (context, watch, _) {
-        final list = watch(rankingProvider);
+        final list = watch(provider);
         Widget childWidget;
         if (list.length == 0) {
           childWidget = Center(child: CircularProgressIndicator());
@@ -38,7 +84,6 @@ class RankingPostScreen extends StatelessWidget {
         }
         return childWidget;
       }),
-    ));
+    );
   }
-
 }

@@ -81,7 +81,9 @@ class NewsCard extends StatelessWidget {
                 ); // int.parse(_age));
                 _addHistory(newHistory);
                 context.read(newsProvider.notifier).changeOneLatest(_id);
-                context.read(rankingProvider.notifier).changeOneLatest(_id);
+                context.read(rankingMonthProvider.notifier).changeOneLatest(_id);
+                context.read(rankingWeekProvider.notifier).changeOneLatest(_id);
+                context.read(rankingDayProvider.notifier).changeOneLatest(_id);
                 context.read(recommendedProvider.notifier).changeOneLatest(_id);
                 context.read(historyProvider.notifier).addHistory(newHistory);
                 _incrViewCount(_id);

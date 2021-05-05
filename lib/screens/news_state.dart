@@ -11,7 +11,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 final newsProvider = StateNotifierProvider((ref) => NewsState("latest"));
 final recommendedProvider = StateNotifierProvider((ref) => NewsState("recommended"));
 final historyProvider = StateNotifierProvider((ref) => NewsState("history"));
-final rankingProvider = StateNotifierProvider((ref) => NewsState("ranking"));
+final rankingMonthProvider = StateNotifierProvider((ref) => NewsState("month_ranking"));
+final rankingWeekProvider = StateNotifierProvider((ref) => NewsState("week_ranking"));
+final rankingDayProvider = StateNotifierProvider((ref) => NewsState("day_ranking"));
 
 class NewsState extends StateNotifier<List>  {
   // NewsState() : super([]);
@@ -23,8 +25,14 @@ class NewsState extends StateNotifier<List>  {
       case "history":
         this.initHistory();
         break;
-      case "ranking":
-        this.getRanking();
+      case "month_ranking":
+        this.getRanking("monthly");
+        break;
+      case "week_ranking":
+        this.getRanking("weekly");
+        break;
+      case "day_ranking":
+        this.getRanking("daily");
         break;
       case "recommended":
         this.getRecommended();
@@ -129,8 +137,8 @@ class NewsState extends StateNotifier<List>  {
     state = historyItems;
   }
 
-  void getRanking () async {
-    var getPostURL = baseURL + "/mongo/ranking";
+  void getRanking (String type) async {
+    var getPostURL = baseURL + "/mongo/ranking/" + type;
     http.Response response = await http.get(getPostURL);
     data = json.decode(response.body);
 
