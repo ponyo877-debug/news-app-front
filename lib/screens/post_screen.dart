@@ -22,7 +22,7 @@ class PostScreen extends StatelessWidget {
 
     return DefaultTabController(
         length: 2,
-        initialIndex: 1,
+        initialIndex: 0,
         child: Scaffold(
           appBar:TabBar(
             //unselectedLabelColor: Colors.redAccent,

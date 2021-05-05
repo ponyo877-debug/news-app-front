@@ -141,30 +141,40 @@ class NewsState extends StateNotifier<List>  {
   void getRecommended () async {
     historyBox = await Hive.openBox<HistoryModel>('history');
     List<HistoryModel> historyItems = historyBox.values.toList();
-    int index = 0;
-    String ids = "";
-    for (var item in historyItems.reversed) {
-      if (ids == "") {
-        ids = item.id;
-      } else {
-        ids = ids + "," + item.id;
+
+    if (historyItems.length == 0) {
+      var getPostURL = baseURL + "/mongo/ranking";
+      http.Response response = await http.get(getPostURL);
+      data = json.decode(response.body);
+
+      newsPost = data["data"];
+    } else {
+      int index = 0;
+      String ids = "";
+      for (var item in historyItems.reversed) {
+        if (ids == "") {
+          ids = item.id;
+        } else {
+          ids = ids + "," + item.id;
+        }
+        index++;
+        //直近閲覧した15の記事からレコメンドを作成
+        if (index >= 15) {
+          break;
+        }
       }
-      index++;
-      //直近閲覧した15の記事からレコメンドを作成
-      if (index >= 15) {
-        break;
-      }
+
+      var getPostURL = baseURL + "/personal?ids=" + ids;
+      //print(getPostURL);
+      http.Response response = await http.get(getPostURL);
+      data = json
+          .decode(
+          Utf8Decoder(allowMalformed: true).convert(response.bodyBytes));
+
+      //print("aaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+
+      newsPost = data["data"];
     }
-
-    var getPostURL = baseURL + "/personal?ids=" + ids;
-    print(getPostURL);
-    http.Response response = await http.get(getPostURL);
-    data = json
-        .decode(Utf8Decoder(allowMalformed: true).convert(response.bodyBytes));
-
-    //print("aaaaaaaaaaaaaaaaaaaaaaaaaaaa");
-
-    newsPost = data["data"];
     _initReadFlg();
   }
 
