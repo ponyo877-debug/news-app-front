@@ -12,8 +12,13 @@ class PostScreen extends StatelessWidget {
   final _kTabs = [
     //Tab(icon: Icon(Icons.fiber_new), text: 'Latest News'),
     //Tab(icon: Icon(Icons.recommend), text: 'Recommended News'),
-    Center (child: Icon(Icons.fiber_new, size: 30)),
-    Center (child: Row (children: [Icon(Icons.recommend, size: 30), SizedBox(width:10), Text("for You")], mainAxisAlignment: MainAxisAlignment.center)),
+    Center(child: Icon(Icons.fiber_new, size: 30)),
+    Center(
+        child: Row(children: [
+      Icon(Icons.recommend, size: 30),
+      SizedBox(width: 10),
+      Text("for You")
+    ], mainAxisAlignment: MainAxisAlignment.center)),
   ];
 
   @override
@@ -21,33 +26,31 @@ class PostScreen extends StatelessWidget {
     //print(context.runtimeType);
 
     return DefaultTabController(
-        length: 2,
-        initialIndex: 0,
-        child: Scaffold(
-          appBar:TabBar(
-            //unselectedLabelColor: Colors.redAccent,
-            indicatorSize: TabBarIndicatorSize.label,
-            indicator: BoxDecoration(
-                borderRadius: BorderRadius.circular(50),
-                color: Colors.blueGrey),
-            labelStyle: TextStyle (fontSize: 20),
-            tabs: _kTabs,
+      length: 2,
+      initialIndex: 0,
+      child: Scaffold(
+        appBar: TabBar(
+          //unselectedLabelColor: Colors.redAccent,
+          indicatorSize: TabBarIndicatorSize.label,
+          indicator: BoxDecoration(
+              borderRadius: BorderRadius.circular(50), color: Colors.blueGrey),
+          labelStyle: TextStyle(fontSize: 20),
+          tabs: _kTabs,
+        ),
+        body: TabBarView(
+          children: <Widget>[
+            Center(
+              child: LatestScreen(),
             ),
-      body: TabBarView(
-            children: <Widget>[
-              Center(
-                child: LatestScreen(),
-              ),
-              Center(
-                child: RecommendedScreen(),
-              ),
-            ],
-          ),
-    ),
+            Center(
+              child: RecommendedScreen(),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
-
 
 class LatestScreen extends StatelessWidget {
   @override
@@ -55,52 +58,51 @@ class LatestScreen extends StatelessWidget {
     //print(context.runtimeType);
 
     return RefreshIndicator(
-        onRefresh: () async {
-      context.read(newsProvider.notifier).getPost(true);
-    },
-    child: Consumer(builder: (context, watch, _) {
-            //print(context.runtimeType);
-            final list = watch(newsProvider);
-            Widget childWidget;
-            if (list.length == 0) {
-              childWidget = Center(child: CircularProgressIndicator());
-            } else {
-              childWidget = ListView.builder(
-                physics: AlwaysScrollableScrollPhysics(),
-                itemBuilder: (BuildContext context, int index) {
-                  if (index == list.length) {
-                    //print(list);
-                    context.read(newsProvider.notifier).getPost(false);
-                    return new Center(
-                      child: new Container(
-                        margin: const EdgeInsets.only(top: 8.0),
-                        width: 32.0,
-                        height: 32.0,
-                        child: const CircularProgressIndicator(),
-                      ),
-                    );
-                  } else if (index > list.length) {
-                    return null;
-                  }
-                  return NewsCard(
-                    "${list[index]["_id"]}",
-                    "${list[index]["image"]}",
-                    "${list[index]["publishedAt"]}",
-                    "${list[index]["siteID"]}",
-                    "${list[index]["sitetitle"]}",
-                    "${list[index]["titles"]}",
-                    "${list[index]["url"]}",
-                    list[index]["readFlg"],
-                  );
-                },
+      onRefresh: () async {
+        context.read(newsProvider.notifier).getPost(true);
+      },
+      child: Consumer(builder: (context, watch, _) {
+        //print(context.runtimeType);
+        final list = watch(newsProvider);
+        Widget childWidget;
+        if (list.length == 0) {
+          childWidget = Center(child: CircularProgressIndicator());
+        } else {
+          childWidget = ListView.builder(
+            physics: AlwaysScrollableScrollPhysics(),
+            itemBuilder: (BuildContext context, int index) {
+              if (index == list.length) {
+                //print(list);
+                context.read(newsProvider.notifier).getPost(false);
+                return new Center(
+                  child: new Container(
+                    margin: const EdgeInsets.only(top: 8.0),
+                    width: 32.0,
+                    height: 32.0,
+                    child: const CircularProgressIndicator(),
+                  ),
+                );
+              } else if (index > list.length) {
+                return null;
+              }
+              return NewsCard(
+                "${list[index]["_id"]}",
+                "${list[index]["image"]}",
+                "${list[index]["publishedAt"]}",
+                "${list[index]["siteID"]}",
+                "${list[index]["sitetitle"]}",
+                "${list[index]["titles"]}",
+                "${list[index]["url"]}",
+                list[index]["readFlg"],
               );
-            }
-            return childWidget;
-          }),
+            },
+          );
+        }
+        return childWidget;
+      }),
     );
   }
 }
-
 
 class RecommendedScreen extends StatelessWidget {
   @override
@@ -120,21 +122,22 @@ class RecommendedScreen extends StatelessWidget {
         } else {
           childWidget = ListView.builder(
             physics: AlwaysScrollableScrollPhysics(),
+            itemCount: list.length,
             itemBuilder: (BuildContext context, int index) {
-              if (index == list.length) {
-                //print(list);
-                context.read(recommendedProvider.notifier).getPost(false);
-                return new Center(
-                  child: new Container(
-                    margin: const EdgeInsets.only(top: 8.0),
-                    width: 32.0,
-                    height: 32.0,
-                    child: const CircularProgressIndicator(),
-                  ),
-                );
-              } else if (index > list.length) {
-                return null;
-              }
+              // if (index == list.length) {
+              //   //print(list);
+              //   context.read(recommendedProvider.notifier).getPost(false);
+              //   return new Center(
+              //     child: new Container(
+              //       margin: const EdgeInsets.only(top: 8.0),
+              //       width: 32.0,
+              //       height: 32.0,
+              //       child: const CircularProgressIndicator(),
+              //     ),
+              //   );
+              // } else if (index > list.length) {
+              //   return null;
+              // }
               return NewsCard(
                 "${list[index]["_id"]}",
                 "${list[index]["image"]}",
