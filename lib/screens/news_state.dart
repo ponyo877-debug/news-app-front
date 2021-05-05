@@ -143,7 +143,7 @@ class NewsState extends StateNotifier<List>  {
     List<HistoryModel> historyItems = historyBox.values.toList();
     int index = 0;
     String ids = "";
-    for (var item in historyItems) {
+    for (var item in historyItems.reversed) {
       if (ids == "") {
         ids = item.id;
       } else {
@@ -157,12 +157,12 @@ class NewsState extends StateNotifier<List>  {
     }
 
     var getPostURL = baseURL + "/personal?ids=" + ids;
+    print(getPostURL);
     http.Response response = await http.get(getPostURL);
     data = json
         .decode(Utf8Decoder(allowMalformed: true).convert(response.bodyBytes));
 
     //print("aaaaaaaaaaaaaaaaaaaaaaaaaaaa");
-    //print(data);
 
     newsPost = data["data"];
     _initReadFlg();
