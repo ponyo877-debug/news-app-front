@@ -78,6 +78,7 @@ class EachRankingPostScreen extends StatelessWidget {
                 "${list[index]["titles"]}",
                 "${list[index]["url"]}",
                 list[index]["readFlg"],
+                list[index]["favoriteFlg"],
               );
             },
           );

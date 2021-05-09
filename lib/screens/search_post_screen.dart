@@ -19,6 +19,7 @@ class _SearchPostScreen extends State<SearchPostScreen> {
   List newsPost = [];
 
   Box historyBox;
+  Box favoriteBox;
   Future<dynamic> _future;
 
   @override
@@ -65,6 +66,7 @@ class _SearchPostScreen extends State<SearchPostScreen> {
   Future _initReadFlg() async {
     //if (historyBox == null) {
     historyBox = await Hive.openBox<HistoryModel>('history');
+    favoriteBox = await Hive.openBox<HistoryModel>('favorite');
     //}
     for (int i = 0; i < newsPost.length; i++) {
       if (newsPost[i]["readFlg"] == null) {
@@ -75,6 +77,18 @@ class _SearchPostScreen extends State<SearchPostScreen> {
           newsPost[i]["readFlg"] = false;
         } else {
           newsPost[i]["readFlg"] = true;
+        }
+      }
+
+      //init favorite Flg
+      if (newsPost[i]["favoriteFlg"] != true) {
+        var check = favoriteBox.values.firstWhere(
+                (list) => list.id == newsPost[i]["_id"],
+            orElse: () => null);
+        if (check == null) {
+          newsPost[i]["favoriteFlg"] = false;
+        } else {
+          newsPost[i]["favoriteFlg"] = true;
         }
       }
     }
@@ -118,6 +132,7 @@ class _SearchPostScreen extends State<SearchPostScreen> {
                               "${newsPost[index]["titles"]}",
                               "${newsPost[index]["url"]}",
                               newsPost[index]["readFlg"],
+                              newsPost[index]["favoriteFlg"],
                             );
                           },
                         );

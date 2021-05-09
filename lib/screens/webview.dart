@@ -227,7 +227,9 @@ class _MatomeWebView extends State<MatomeWebView> {
                             "${recomPost[index]["sitetitle"]}",
                             "${recomPost[index]["titles"]}",
                             "${recomPost[index]["url"]}",
-                            false),
+                            false,
+                            false,
+                        ),
                       );
                     },
                   ));

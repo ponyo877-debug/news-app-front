@@ -11,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 final newsProvider = StateNotifierProvider((ref) => NewsState("latest"));
 final recommendedProvider = StateNotifierProvider((ref) => NewsState("recommended"));
 final historyProvider = StateNotifierProvider((ref) => NewsState("history"));
+final favoriteProvider = StateNotifierProvider((ref) => NewsState("favorite"));
 final rankingMonthProvider = StateNotifierProvider((ref) => NewsState("month_ranking"));
 final rankingWeekProvider = StateNotifierProvider((ref) => NewsState("week_ranking"));
 final rankingDayProvider = StateNotifierProvider((ref) => NewsState("day_ranking"));
@@ -23,7 +24,10 @@ class NewsState extends StateNotifier<List>  {
         this.getPost(true);
         break;
       case "history":
-        this.initHistory();
+        this.initHistory("history");
+        break;
+      case "favorite":
+        this.initHistory("favorite");
         break;
       case "month_ranking":
         this.getRanking("monthly");
@@ -59,6 +63,7 @@ class NewsState extends StateNotifier<List>  {
   String baseURL = "http://gitouhon-juku-k8s2.ga";
 
   Box historyBox;
+  Box favoriteBox;
 
   void getPost(bool initFlg) async {
     //print(initFlg);
@@ -89,6 +94,8 @@ class NewsState extends StateNotifier<List>  {
 
   void _initReadFlg () async {
     historyBox = await Hive.openBox<HistoryModel>('history');
+    favoriteBox = await Hive.openBox<HistoryModel>('favorite');
+
     for (var newsPostOne in newsPost) {
       if (newsPostOne["readFlg"] != true) {
         var check = historyBox.values.firstWhere(
@@ -98,6 +105,18 @@ class NewsState extends StateNotifier<List>  {
           newsPostOne["readFlg"] = false;
         } else {
           newsPostOne["readFlg"] = true;
+        }
+      }
+
+      //init favorite Flg
+      if (newsPostOne["favoriteFlg"] != true) {
+        var check = favoriteBox.values.firstWhere(
+                (list) => list.id == newsPostOne["_id"],
+            orElse: () => null);
+        if (check == null) {
+          newsPostOne["favoriteFlg"] = false;
+        } else {
+          newsPostOne["favoriteFlg"] = true;
         }
       }
     }
@@ -123,17 +142,44 @@ class NewsState extends StateNotifier<List>  {
     }
   }
 
-  void initHistory () async {
+  void changeOneFavorite(String id, bool onFlg) {
+    for (var newsPostOne in newsPost) {
+      if (newsPostOne["_id"] == id) {
+        if (onFlg) {
+          newsPostOne["favoriteFlg"] = false;
+        } else {
+          newsPostOne["favoriteFlg"] = true;
+        }
+        //print(newsPostOne["titles"]);
+        //print(newsPostOne["favoriteFlg"]);
+
+        state = newsPost;
+      }
+    }
+  }
+
+  void initHistory (String type) async {
     //print("init History kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk");
-    historyBox = await Hive.openBox<HistoryModel>('history');
-    List<HistoryModel> historyItems = historyBox.values.toList();
-    state = historyItems;
+    historyBox = await Hive.openBox<HistoryModel>(type);
+    List<HistoryModel> Items = historyBox.values.toList();
+    state = Items;
   }
 
   void addHistory (HistoryModel history) {
     //print("add history");
     List<HistoryModel> historyItems = state;
     historyItems.add(history);
+    state = historyItems;
+  }
+
+  void deleteHistory (String delId) {
+    //print("delete history");
+    List<HistoryModel> historyItems = state;
+    for (int index = 0; index < historyItems.length; index++) {
+      if (historyItems[index].id == delId) {
+        historyItems.removeAt(index);
+      }
+    }
     state = historyItems;
   }
 

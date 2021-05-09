@@ -19,14 +19,33 @@ class NewsCard extends StatelessWidget {
   String url;
   //bool colorChange = true;
   bool readFlg = false;
+  bool favoriteFlg = false;
   static const String placeholderImg = 'assets/images/no_image_square.jpg';
 
   NewsCard(this._id, this.image, this.publishedAt, this.siteID, this.sitetitle,
-      this.titles, this.url, this.readFlg);
+      this.titles, this.url, this.readFlg, this.favoriteFlg);
 
   Future _addHistory(HistoryModel historyModel) async {
     final historyBox = await Hive.openBox<HistoryModel>('history');
     historyBox.add(historyModel);
+  }
+
+  Future _addFavorite(HistoryModel historyModel) async {
+    final favoriteBox = await Hive.openBox<HistoryModel>('favorite');
+    favoriteBox.add(historyModel);
+    print(favoriteBox.length);
+  }
+
+  Future _deleteFavorite(String FavoriteId) async {
+    final favoriteBox = await Hive.openBox<HistoryModel>('favorite');
+    for (int index = 0; index < favoriteBox.length; index++) {
+      //print(index.toString() + ", " + favoriteBox.getAt(index).id);
+      if (favoriteBox.getAt(index).id == FavoriteId) {
+        favoriteBox.deleteAt(index);
+        //break;
+      }
+    }
+    //print(favoriteBox.length);
   }
 
   @override
@@ -52,23 +71,61 @@ class NewsCard extends StatelessWidget {
                         this.readFlg ? Colors.grey : Colors.red[200]),
                   ]),
               // TODO: Need to implement favorite button
-              // trailing: widget.publishedAt != ""
-              //     ? IconButton(
-              //         icon: Icon(Icons.favorite_border),
-              //         onPressed: () {
-              //           print('Push ${widget._id}\'s Favorite Button!');
-              //           final newfavorite = HistoryModel(
-              //               widget._id,
-              //               widget.image,
-              //               widget.publishedAt,
-              //               widget.siteID,
-              //               widget.sitetitle,
-              //               widget.titles,
-              //               widget.url);
-              //           _addFavorite(newfavorite);
-              //         },
-              //       )
-              //     : null,
+              trailing: this.publishedAt != ""
+                  ? InkWell(
+                  // ? IconButton(
+                      // iconSize: 5,
+                      child: Icon(
+                      // icon: Icon(
+                          this.favoriteFlg
+                              ? Icons.favorite
+                              : Icons.favorite_border,
+                          color: this.favoriteFlg ? Colors.red : null),
+                      //onPressed: () {
+                      onTap: () {
+                        if (!this.favoriteFlg) {
+                          //print('In ${this.titles}\'s Favorite Button!');
+                          final newfavorite = HistoryModel(
+                            this._id,
+                            this.image,
+                            this.publishedAt,
+                            this.siteID,
+                            this.sitetitle,
+                            this.titles,
+                            this.url,
+                          );
+                          _addFavorite(newfavorite);
+                          context
+                              .read(favoriteProvider.notifier)
+                              .addHistory(newfavorite);
+                        } else {
+                          //print('Out ${this.titles}\'s Favorite Button!');
+                          _deleteFavorite(this._id);
+                          context
+                              .read(favoriteProvider.notifier)
+                              .deleteHistory(this._id);
+                        }
+                        context
+                            .read(newsProvider.notifier)
+                            .changeOneFavorite(this._id, this.favoriteFlg);
+                        context
+                            .read(rankingMonthProvider.notifier)
+                            .changeOneFavorite(this._id, this.favoriteFlg);
+                        context
+                            .read(rankingWeekProvider.notifier)
+                            .changeOneFavorite(this._id, this.favoriteFlg);
+                        context
+                            .read(rankingDayProvider.notifier)
+                            .changeOneFavorite(this._id, this.favoriteFlg);
+                        context
+                            .read(recommendedProvider.notifier)
+                            .changeOneFavorite(this._id, this.favoriteFlg);
+                        // context
+                        //     .read(historyProvider.notifier)
+                        //     .changeOneFavorite(this._id, this.favoriteFlg);
+                      },
+                    )
+                  : null,
               onTap: () {
                 Navigator.of(context).push(MaterialPageRoute(
                     builder: (BuildContext context) => MatomeWebView(
@@ -156,9 +213,18 @@ class NewsCard extends StatelessWidget {
 }
 
 class NewsRankingCard extends NewsCard {
-  NewsRankingCard(String _id, String image, String publishedAt, String siteID,
-      String sitetitle, String titles, String url, bool readFlg)
-      : super(_id, image, publishedAt, siteID, sitetitle, titles, url, readFlg);
+  NewsRankingCard(
+      String _id,
+      String image,
+      String publishedAt,
+      String siteID,
+      String sitetitle,
+      String titles,
+      String url,
+      bool readFlg,
+      bool favoriteFlg)
+      : super(_id, image, publishedAt, siteID, sitetitle, titles, url, readFlg,
+            favoriteFlg);
 
   @override
   thumbnail(rank) {
@@ -172,9 +238,18 @@ class NewsRankingCard extends NewsCard {
 }
 
 class NewsHistoryCard extends NewsCard {
-  NewsHistoryCard(String _id, String image, String publishedAt, String siteID,
-      String sitetitle, String titles, String url, bool readFlg)
-      : super(_id, image, publishedAt, siteID, sitetitle, titles, url, readFlg);
+  NewsHistoryCard(
+      String _id,
+      String image,
+      String publishedAt,
+      String siteID,
+      String sitetitle,
+      String titles,
+      String url,
+      bool readFlg,
+      bool favoriteFlg)
+      : super(_id, image, publishedAt, siteID, sitetitle, titles, url, readFlg,
+            favoriteFlg);
 
   @override
   Widget build(BuildContext context) {

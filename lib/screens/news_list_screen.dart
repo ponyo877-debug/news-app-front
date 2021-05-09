@@ -23,7 +23,7 @@ class NewsListScreen extends StatelessWidget {
     TabInfo(Icons.format_list_numbered, 'Ranking', RankingPostScreen()),
     TabInfo(Icons.search, 'Search', SearchPostScreen()),
     TabInfo(Icons.home, 'Home', PostScreen()),
-    TabInfo(Icons.history, 'History', HistoryPostScreen()),
+    TabInfo(Icons.person_pin , 'My Page', HistoryPostScreen()),
     TabInfo(Icons.settings, 'Setting', SettingScreen()),
   ];
 

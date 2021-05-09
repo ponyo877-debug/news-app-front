@@ -94,6 +94,7 @@ class LatestScreen extends StatelessWidget {
                 "${list[index]["titles"]}",
                 "${list[index]["url"]}",
                 list[index]["readFlg"],
+                list[index]["favoriteFlg"],
               );
             },
           );
@@ -147,6 +148,7 @@ class RecommendedScreen extends StatelessWidget {
                 "${list[index]["titles"]}",
                 "${list[index]["url"]}",
                 list[index]["readFlg"],
+                list[index]["favoriteFlg"],
               );
             },
           );
