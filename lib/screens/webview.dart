@@ -44,6 +44,7 @@ class _MatomeWebView extends State<MatomeWebView> {
 
   Future _getRecom(String postID) async {
     var getRecomURL = baseURL + "/recom/" + postID;
+    print('getRecomURL: $getRecomURL');
     http.Response response = await http.get(getRecomURL);
     data = json
         .decode(Utf8Decoder(allowMalformed: true).convert(response.bodyBytes));
@@ -166,6 +167,7 @@ class _MatomeWebView extends State<MatomeWebView> {
                 onWebViewCreated: (WebViewController webViewController) {
                   // controller.complete(webViewController);
                   _controller = webViewController;
+                  print(snapshot.data);
                   _controller.loadUrl(snapshot.data);
                   _getRecom(widget.postID);
                 },
@@ -190,12 +192,13 @@ class _MatomeWebView extends State<MatomeWebView> {
             name: 'BANNER',
           ),
         ),
-        floatingActionButton: Builder(
-          builder: (context) => _bookmarkButton(context),
-        ));
+        floatingActionButton: recomPost.isNotEmpty? Builder(
+          builder: (context) => _getRecomkButton(context),
+        ): null,
+    );
   }
 
-  _bookmarkButton(BuildContext context) {
+  _getRecomkButton(BuildContext context) {
     return FloatingActionButton(
       backgroundColor: Colors.black,
       child: Icon(Icons.bolt, color: Colors.amberAccent, size: 50),
@@ -333,7 +336,10 @@ class _MatomeWebView extends State<MatomeWebView> {
       }
       return modifiedHtml;
     } else {
-      throw Exception();
+      var notFoundPage = "\<title\>この記事は削除されたようです\</title\>\<style\>*{box-sizing:border-box}body{font:110%/1.5 system-ui,sans-serif;background:#131417;color:#fff;height:100vh;margin:0;display:grid;place-items:center;padding:2rem}main{max-width:350px}a{color:#56bbf9}\</style\>\<main\>\<h1 data-test-id=\"text-404\"\>おそらくこの記事は削除されています\</h1\>\<p\>申し訳ありませんが他の記事を参照下さい、右下に稲妻マークがあればこの記事の関連記事を確認できます。\</main\>";
+      return Uri.dataFromString(notFoundPage,
+          mimeType: 'text/html', encoding: Encoding.getByName('UTF-8'))
+          .toString();
     }
   }
 
