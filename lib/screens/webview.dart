@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
@@ -184,14 +185,14 @@ class _MatomeWebView extends State<MatomeWebView> {
             }
           },
         ),
-        bottomNavigationBar: AdmobBanner(
+        bottomNavigationBar: Platform.isAndroid? AdmobBanner(
           adUnitId: AdMobService().getBannerAdUnitId(),
           adSize: AdmobBannerSize(
             width: MediaQuery.of(context).size.width.toInt(),
             height: AdMobService().getHeight(context).toInt(),
             name: 'BANNER',
           ),
-        ),
+        ): null,
         floatingActionButton: recomPost.isNotEmpty? Builder(
           builder: (context) => _getRecomkButton(context),
         ): null,
