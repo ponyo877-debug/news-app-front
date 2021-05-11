@@ -154,47 +154,49 @@ class _MatomeWebView extends State<MatomeWebView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: Text(widget.title),
+      appBar: AppBar(
+        title: Text(widget.title),
+      ),
+      body: FutureBuilder(
+        future: _loadUri(widget.selectedUrl),
+        builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+          if (snapshot.hasData) {
+            return WebView(
+              // initialUrl: widget.selectedUrl,
+              javascriptMode: JavascriptMode.unrestricted,
+              onWebViewCreated: (WebViewController webViewController) {
+                // controller.complete(webViewController);
+                _controller = webViewController;
+                print(snapshot.data);
+                _controller.loadUrl(snapshot.data);
+                _getRecom(widget.postID);
+              },
+            );
+          } else {
+            return new Center(
+              child: new Container(
+                margin: const EdgeInsets.only(top: 8.0),
+                width: 32.0,
+                height: 32.0,
+                child: const CircularProgressIndicator(),
+              ),
+            );
+          }
+        },
+      ),
+      bottomNavigationBar: AdmobBanner(
+        adUnitId: AdMobService().getBannerAdUnitId(),
+        adSize: AdmobBannerSize(
+          width: MediaQuery.of(context).size.width.toInt(),
+          height: AdMobService().getHeight(context).toInt(),
+          name: 'BANNER',
         ),
-        body: FutureBuilder(
-          future: _loadUri(widget.selectedUrl),
-          builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
-            if (snapshot.hasData) {
-              return WebView(
-                // initialUrl: widget.selectedUrl,
-                javascriptMode: JavascriptMode.unrestricted,
-                onWebViewCreated: (WebViewController webViewController) {
-                  // controller.complete(webViewController);
-                  _controller = webViewController;
-                  print(snapshot.data);
-                  _controller.loadUrl(snapshot.data);
-                  _getRecom(widget.postID);
-                },
-              );
-            } else {
-              return new Center(
-                child: new Container(
-                  margin: const EdgeInsets.only(top: 8.0),
-                  width: 32.0,
-                  height: 32.0,
-                  child: const CircularProgressIndicator(),
-                ),
-              );
-            }
-          },
-        ),
-        bottomNavigationBar: AdmobBanner(
-          adUnitId: AdMobService().getBannerAdUnitId(),
-          adSize: AdmobBannerSize(
-            width: MediaQuery.of(context).size.width.toInt(),
-            height: AdMobService().getHeight(context).toInt(),
-            name: 'BANNER',
-          ),
-        ),
-        floatingActionButton: recomPost.isNotEmpty? Builder(
-          builder: (context) => _getRecomkButton(context),
-        ): null,
+      ),
+      floatingActionButton: recomPost.isNotEmpty
+          ? Builder(
+              builder: (context) => _getRecomkButton(context),
+            )
+          : null,
     );
   }
 
@@ -222,16 +224,16 @@ class _MatomeWebView extends State<MatomeWebView> {
                       return Container(
                         width: MediaQuery.of(context).size.width * 0.6,
                         child: NewsCard(
-                            "${recomPost[index]["_id"]}",
-                            "${recomPost[index]["image"]}",
-                            "",
-                            // "${recomPost[index]["publishedAt"]}",
-                            "${recomPost[index]["siteID"]}",
-                            "${recomPost[index]["sitetitle"]}",
-                            "${recomPost[index]["titles"]}",
-                            "${recomPost[index]["url"]}",
-                            false,
-                            false,
+                          "${recomPost[index]["_id"]}",
+                          "${recomPost[index]["image"]}",
+                          "",
+                          // "${recomPost[index]["publishedAt"]}",
+                          "${recomPost[index]["siteID"]}",
+                          "${recomPost[index]["sitetitle"]}",
+                          "${recomPost[index]["titles"]}",
+                          "${recomPost[index]["url"]}",
+                          false,
+                          false,
                         ),
                       );
                     },
@@ -303,6 +305,10 @@ class _MatomeWebView extends State<MatomeWebView> {
     } on PlatformException {
       userAgent = '<error>';
     }
+    if (Platform.isIOS) {
+      userAgent =
+          'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1';
+    }
     var response = await http.Client()
         .get(Uri.parse(loaduri), headers: {'User-Agent': userAgent});
     // print("response status: ${response.statusCode}");
@@ -336,9 +342,10 @@ class _MatomeWebView extends State<MatomeWebView> {
       }
       return modifiedHtml;
     } else {
-      var notFoundPage = "\<title\>この記事は削除されたようです\</title\>\<style\>*{box-sizing:border-box}body{font:110%/1.5 system-ui,sans-serif;background:#131417;color:#fff;height:100vh;margin:0;display:grid;place-items:center;padding:2rem}main{max-width:350px}a{color:#56bbf9}\</style\>\<main\>\<h1 data-test-id=\"text-404\"\>おそらくこの記事は削除されています\</h1\>\<p\>申し訳ありませんが他の記事を参照下さい、右下に稲妻マークがあればこの記事の関連記事を確認できます。\</main\>";
+      var notFoundPage =
+          "\<title\>この記事は削除されたようです\</title\>\<style\>*{box-sizing:border-box}body{font:110%/1.5 system-ui,sans-serif;background:#131417;color:#fff;height:100vh;margin:0;display:grid;place-items:center;padding:2rem}main{max-width:350px}a{color:#56bbf9}\</style\>\<main\>\<h1 data-test-id=\"text-404\"\>おそらくこの記事は削除されています\</h1\>\<p\>申し訳ありませんが他の記事を参照下さい、右下に稲妻マークがあればこの記事の関連記事を確認できます。\</main\>";
       return Uri.dataFromString(notFoundPage,
-          mimeType: 'text/html', encoding: Encoding.getByName('UTF-8'))
+              mimeType: 'text/html', encoding: Encoding.getByName('UTF-8'))
           .toString();
     }
   }
