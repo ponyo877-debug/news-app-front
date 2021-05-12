@@ -214,7 +214,7 @@ class _MatomeWebView extends State<MatomeWebView> {
           Scaffold.of(context).showBottomSheet<void>(
             (BuildContext context) {
               return Container(
-                  height: MediaQuery.of(context).size.height * 0.15,
+                  height: MediaQuery.of(context).size.height * 0.2,
                   child: ListView.builder(
                     itemCount: recomPost.length,
                     scrollDirection: Axis.horizontal,
@@ -355,6 +355,10 @@ class _MatomeWebView extends State<MatomeWebView> {
       // print("userAgent: ${userAgent}");
     } on PlatformException {
       userAgent = '<error>';
+    }
+    if (Platform.isIOS) {
+      userAgent =
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1';
     }
     var response = await http.Client()
         .get(Uri.parse(loaduri), headers: {'User-Agent': userAgent});
