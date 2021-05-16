@@ -11,15 +11,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 
 final newsProvider = StateNotifierProvider((ref) => NewsState("latest"));
-final recommendedProvider = StateNotifierProvider((ref) => NewsState("recommended"));
+final recommendedProvider =
+    StateNotifierProvider((ref) => NewsState("recommended"));
 final historyProvider = StateNotifierProvider((ref) => NewsState("history"));
 final favoriteProvider = StateNotifierProvider((ref) => NewsState("favorite"));
-final rankingMonthProvider = StateNotifierProvider((ref) => NewsState("month_ranking"));
-final rankingWeekProvider = StateNotifierProvider((ref) => NewsState("week_ranking"));
-final rankingDayProvider = StateNotifierProvider((ref) => NewsState("day_ranking"));
-final searchResultProvider = StateNotifierProvider((ref) => NewsState("search"));
+final rankingMonthProvider =
+    StateNotifierProvider((ref) => NewsState("month_ranking"));
+final rankingWeekProvider =
+    StateNotifierProvider((ref) => NewsState("week_ranking"));
+final rankingDayProvider =
+    StateNotifierProvider((ref) => NewsState("day_ranking"));
+final searchResultProvider =
+    StateNotifierProvider((ref) => NewsState("search"));
 
-class NewsState extends StateNotifier<List>  {
+class NewsState extends StateNotifier<List> {
   // NewsState() : super([]);
   NewsState(String type) : super([]) {
     switch (type) {
@@ -90,7 +95,8 @@ class NewsState extends StateNotifier<List>  {
     if (_fileExists) {
       _skipIDs = await _filePath.readAsString();
     }
-    var getPostURL = baseURL + "/mongo/get?lastpublished=" +
+    var getPostURL = baseURL +
+        "/mongo/get?lastpublished=" +
         lastpublished +
         "&skipIDs=" +
         _skipIDs;
@@ -104,20 +110,20 @@ class NewsState extends StateNotifier<List>  {
     _initReadFlg();
   }
 
-  void _initReadFlg () async {
+  void _initReadFlg() async {
     historyBox = await Hive.openBox<HistoryModel>('history');
     favoriteBox = await Hive.openBox<HistoryModel>('favorite');
 
     if (newsPost != null) {
       if (newsPost.length != 0) {
         for (var newsPostOne in newsPost) {
-          if (newsPostOne == null) {
-            print("aaaaaaaaaaaaa");
-            print(newsPost);
-          }
+          // if (newsPostOne == null) {
+          // print("aaaaaaaaaaaaa");
+          // print(newsPost);
+          // }
           if (newsPostOne["readFlg"] != true) {
             var check = historyBox.values.firstWhere(
-                    (list) => list.id == newsPostOne["_id"],
+                (list) => list.id == newsPostOne["_id"],
                 orElse: () => null);
             if (check == null) {
               newsPostOne["readFlg"] = false;
@@ -129,23 +135,22 @@ class NewsState extends StateNotifier<List>  {
           //init favorite Flg
           if (newsPostOne["favoriteFlg"] != true) {
             var check = favoriteBox.values.firstWhere(
-                    (list) => list.id == newsPostOne["_id"],
+                (list) => list.id == newsPostOne["_id"],
                 orElse: () => null);
             if (check == null) {
               newsPostOne["favoriteFlg"] = false;
             } else {
               newsPostOne["favoriteFlg"] = true;
-              print("true"+": "+newsPostOne["titles"]);
+              print("true" + ": " + newsPostOne["titles"]);
             }
           }
         }
       }
-
     }
-    print(favoriteBox.values.toList().last.id);
+    // print(favoriteBox.values.toList().last.id);
     state = newsPost;
-    print(newsPost[0]["_id"]);
-    print(newsPost[0]["favoriteFlg"]);
+    // print(newsPost[0]["_id"]);
+    // print(newsPost[0]["favoriteFlg"]);
   }
 
   Future<String> get _localPath async {
@@ -193,14 +198,14 @@ class NewsState extends StateNotifier<List>  {
     }
   }
 
-  void initHistory (String type) async {
+  void initHistory(String type) async {
     //print("init History kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk");
     historyBox = await Hive.openBox<HistoryModel>(type);
     List<HistoryModel> Items = historyBox.values.toList();
     state = Items;
   }
 
-  void addHistory (HistoryModel history, String type) async {
+  void addHistory(HistoryModel history, String type) async {
     //print("add history");
     print(state);
 
@@ -215,27 +220,25 @@ class NewsState extends StateNotifier<List>  {
         historyItems.add(history);
         state = historyItems;
       } else {
-        print("[] です");
+        // print("[] です");
         List<HistoryModel> Items = addBox.values.toList();
         state = Items;
       }
     } else {
-      print("null です");
+      // print("null です");
       List<HistoryModel> Items = addBox.values.toList();
       state = Items;
     }
   }
 
-  void deleteHistory (String delId) async {
+  void deleteHistory(String delId) async {
     //print("delete history");
 
     // delete hive data
     final delBox = await Hive.openBox<HistoryModel>('favorite');
     for (int index = 0; index < delBox.length; index++) {
       //print(index.toString() + ", " + favoriteBox.getAt(index).id);
-      if (delBox
-          .getAt(index)
-          .id == delId) {
+      if (delBox.getAt(index).id == delId) {
         delBox.deleteAt(index);
         //break;
       }
@@ -259,11 +262,9 @@ class NewsState extends StateNotifier<List>  {
       List<HistoryModel> Item = delBox.values.toList();
       state = Item;
     }
-
-
   }
 
-  void getRanking (String type) async {
+  void getRanking(String type) async {
     var getPostURL = baseURL + "/mongo/ranking/" + type;
     http.Response response = await http.get(getPostURL);
     data = json.decode(response.body);
@@ -272,7 +273,7 @@ class NewsState extends StateNotifier<List>  {
     _initReadFlg();
   }
 
-  void getRecommended () async {
+  void getRecommended() async {
     historyBox = await Hive.openBox<HistoryModel>('history');
     List<HistoryModel> historyItems = historyBox.values.toList();
 
@@ -301,8 +302,7 @@ class NewsState extends StateNotifier<List>  {
       var getPostURL = baseURL + "/personal?ids=" + ids;
       print(getPostURL);
       http.Response response = await http.get(getPostURL);
-      data = json
-          .decode(
+      data = json.decode(
           Utf8Decoder(allowMalformed: true).convert(response.bodyBytes));
 
       //print("aaaaaaaaaaaaaaaaaaaaaaaaaaaa");
@@ -327,4 +327,3 @@ class NewsState extends StateNotifier<List>  {
     _initReadFlg();
   }
 }
-
