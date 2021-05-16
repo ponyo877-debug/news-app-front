@@ -164,47 +164,51 @@ class _MatomeWebView extends State<MatomeWebView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: Text(widget.title),
-        ),
-        body: FutureBuilder(
-          future: _loadUri(widget.selectedUrl),
-          builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
-            if (snapshot.hasData) {
-              return WebView(
-                // initialUrl: widget.selectedUrl,
-                javascriptMode: JavascriptMode.unrestricted,
-                onWebViewCreated: (WebViewController webViewController) {
-                  // controller.complete(webViewController);
-                  _controller = webViewController;
-                  print(snapshot.data);
-                  _controller.loadUrl(snapshot.data);
-                  _getRecom(widget.postID);
-                },
-              );
-            } else {
-              return new Center(
-                child: new Container(
-                  margin: const EdgeInsets.only(top: 8.0),
-                  width: 32.0,
-                  height: 32.0,
-                  child: const CircularProgressIndicator(),
-                ),
-              );
-            }
-          },
-        ),
-        bottomNavigationBar: Platform.isAndroid? AdmobBanner(
-          adUnitId: AdMobService().getBannerAdUnitId(),
-          adSize: AdmobBannerSize(
-            width: MediaQuery.of(context).size.width.toInt(),
-            height: AdMobService().getHeight(context).toInt(),
-            name: 'BANNER',
-          ),
-        ): null,
-        floatingActionButton: recomPost.isNotEmpty? Builder(
-          builder: (context) => _getRecomkButton(context),
-        ): null,
+      appBar: AppBar(
+        title: Text(widget.title),
+      ),
+      body: FutureBuilder(
+        future: _loadUri(widget.selectedUrl),
+        builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+          if (snapshot.hasData) {
+            return WebView(
+              // initialUrl: widget.selectedUrl,
+              javascriptMode: JavascriptMode.unrestricted,
+              onWebViewCreated: (WebViewController webViewController) {
+                // controller.complete(webViewController);
+                _controller = webViewController;
+                print(snapshot.data);
+                _controller.loadUrl(snapshot.data);
+                _getRecom(widget.postID);
+              },
+            );
+          } else {
+            return new Center(
+              child: new Container(
+                margin: const EdgeInsets.only(top: 8.0),
+                width: 32.0,
+                height: 32.0,
+                child: const CircularProgressIndicator(),
+              ),
+            );
+          }
+        },
+      ),
+      bottomNavigationBar: Platform.isAndroid
+          ? AdmobBanner(
+              adUnitId: AdMobService().getBannerAdUnitId(),
+              adSize: AdmobBannerSize(
+                width: MediaQuery.of(context).size.width.toInt(),
+                height: AdMobService().getHeight(context).toInt(),
+                name: 'BANNER',
+              ),
+            )
+          : null,
+      floatingActionButton: recomPost.isNotEmpty
+          ? Builder(
+              builder: (context) => _getRecomkButton(context),
+            )
+          : null,
     );
   }
 
@@ -328,7 +332,8 @@ class _MatomeWebView extends State<MatomeWebView> {
         scriptTagwithBR[allbrcount - (2 * i + 2)].remove();
       }
     }
-    scriptTag = doc.body.querySelectorAll('a[href][target="_blank"]:not([class])');
+    scriptTag =
+        doc.body.querySelectorAll('a[href][target="_blank"]:not([class])');
     scriptTagwithBR = doc.body.querySelectorAll('br');
     allbrcount = scriptTagwithBR.length;
     for (int i = 0; i < scriptTag.length; i++) {
@@ -340,7 +345,7 @@ class _MatomeWebView extends State<MatomeWebView> {
       }
     }
     var length_for_delete = scriptTagwithBR.length;
-    for (int i = 0; i < 6; i++){
+    for (int i = 0; i < 6; i++) {
       scriptTagwithBR[length_for_delete - (i + 1)].remove();
     }
     return doc;
@@ -364,13 +369,13 @@ class _MatomeWebView extends State<MatomeWebView> {
   // TODO: Need to implement
   dom.Document modforTetsugakuNews(dom.Document doc) {
     // Delete: span style="font-size: large;"
-    var temp = doc.body.querySelector('span[style="font-size: large;"]');
-    if (temp != null) {
-      temp.remove();
+    var bottomAds =
+        doc.body.querySelectorAll('span[style="font-size: large;"]');
+    for (int i = 0; i < bottomAds.length; i++) {
+      bottomAds[i].remove();
     }
     return doc;
   }
-
 
   Future<String> _loadUri(loaduri) async {
     String userAgent, _decode_charset;
@@ -382,7 +387,7 @@ class _MatomeWebView extends State<MatomeWebView> {
     }
     if (Platform.isIOS) {
       userAgent =
-      'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1';
+          'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1';
     }
     var response = await http.Client()
         .get(Uri.parse(loaduri), headers: {'User-Agent': userAgent});
@@ -435,7 +440,7 @@ class _MatomeWebView extends State<MatomeWebView> {
     }
     if (Platform.isIOS) {
       userAgent =
-      'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1';
+          'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1';
     }
     var response = await http.Client()
         .get(Uri.parse(loaduri), headers: {'User-Agent': userAgent});
