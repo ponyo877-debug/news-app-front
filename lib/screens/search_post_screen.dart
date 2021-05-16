@@ -1,99 +1,9 @@
-import 'package:http/http.dart' as http;
-import 'dart:async';
-import 'dart:convert';
 import 'news_card.dart';
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
-import 'models/history_model.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'news_state.dart';
 
-class SearchPostScreen extends StatefulWidget {
-  @override
-  _SearchPostScreen createState() => _SearchPostScreen();
-}
-
-class _SearchPostScreen extends State<SearchPostScreen> {
-  TextEditingController _searchController = TextEditingController();
-
-  Map<String, dynamic> data;
-  String baseURL = "http://gitouhon-juku-k8s2.ga";
-  List newsPost = [];
-
-  Box historyBox;
-  Box favoriteBox;
-  Future<dynamic> _future;
-
-  @override
-  void initState() {
-    super.initState();
-    _searchController.addListener(_onSearchChanged);
-  }
-
-  @override
-  void dispose() {
-    _searchController.removeListener(_onSearchChanged);
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _future = null;
-    searchResultsList();
-  }
-
-  _onSearchChanged() {
-    _future = null;
-    searchResultsList();
-  }
-
-  Future searchResultsList() async {
-    String searchwords = _searchController.text;
-    var getPostURL = baseURL + "/elastic/get?words=" + searchwords;
-    print(getPostURL);
-    http.Response response = await http.get(getPostURL);
-    data = json.decode(response.body);
-    if (mounted) {
-      setState(() {
-        newsPost = data["data"];
-        if (newsPost != null) {
-          _future = _initReadFlg();
-        }
-      });
-    }
-  }
-
-  Future _initReadFlg() async {
-    //if (historyBox == null) {
-    historyBox = await Hive.openBox<HistoryModel>('history');
-    favoriteBox = await Hive.openBox<HistoryModel>('favorite');
-    //}
-    for (int i = 0; i < newsPost.length; i++) {
-      if (newsPost[i]["readFlg"] == null) {
-        var check = historyBox.values.firstWhere(
-            (list) => list.id == newsPost[i]["_id"],
-            orElse: () => null);
-        if (check == null) {
-          newsPost[i]["readFlg"] = false;
-        } else {
-          newsPost[i]["readFlg"] = true;
-        }
-      }
-
-      //init favorite Flg
-      if (newsPost[i]["favoriteFlg"] != true) {
-        var check = favoriteBox.values.firstWhere(
-                (list) => list.id == newsPost[i]["_id"],
-            orElse: () => null);
-        if (check == null) {
-          newsPost[i]["favoriteFlg"] = false;
-        } else {
-          newsPost[i]["favoriteFlg"] = true;
-        }
-      }
-    }
-    return true;
-  }
+class SearchPostScreen extends StatelessWidget {
 
   Widget build(BuildContext context) {
     return Scaffold(
@@ -104,41 +14,43 @@ class _SearchPostScreen extends State<SearchPostScreen> {
               padding:
                   const EdgeInsets.only(left: 30.0, right: 30.0, bottom: 30.0),
               child: TextField(
-                controller: _searchController,
+                //controller: somethingController,
+                onChanged: (text) {
+                  context.read(searchResultProvider.notifier).searchResultsList(text);
+                },
                 decoration: InputDecoration(prefixIcon: Icon(Icons.search)),
               ),
             ),
             Expanded(
-                child: FutureBuilder(
-                    future: _future,
-                    builder: (BuildContext context, AsyncSnapshot snapshot) {
-                      Widget childWidget;
-                      if (newsPost == null) {
+                child: Consumer(builder: (context, watch, _) {
+                  final list = watch(searchResultProvider);
+                  Widget childWidget;
+                      if (list == null) {
                         childWidget = Container();
-                      } else if (!snapshot.hasData) {
+                      } else if (list.length == 0) {
                         childWidget =
                             Center(child: CircularProgressIndicator());
                       } else {
                         childWidget = ListView.builder(
                           // physics: AlwaysScrollableScrollPhysics(),
-                          itemCount: newsPost == null ? 0 : newsPost.length,
+                          itemCount: list == null ? 0 : list.length,
                           itemBuilder: (BuildContext context, int index) {
                             return NewsCard(
-                              "${newsPost[index]["_id"] == "" ? newsPost[index]["id"] : newsPost[index]["_id"]}",
-                              "${newsPost[index]["image"]}",
-                              "${newsPost[index]["publishedAt"]}",
-                              "${newsPost[index]["siteID"]}",
-                              "${newsPost[index]["sitetitle"]}",
-                              "${newsPost[index]["titles"]}",
-                              "${newsPost[index]["url"]}",
-                              newsPost[index]["readFlg"],
-                              newsPost[index]["favoriteFlg"],
+                              "${list[index]["_id"] == "" ? list[index]["id"] : list[index]["_id"]}",
+                              "${list[index]["image"]}",
+                              "${list[index]["publishedAt"]}",
+                              "${list[index]["siteID"]}",
+                              "${list[index]["sitetitle"]}",
+                              "${list[index]["titles"]}",
+                              "${list[index]["url"]}",
+                              list[index]["readFlg"],
+                              list[index]["favoriteFlg"],
                             );
                           },
                         );
                       }
                       return childWidget;
-                    })),
+                    }))
           ],
         ),
       ),

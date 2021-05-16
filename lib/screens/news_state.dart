@@ -8,6 +8,8 @@ import 'models/history_model.dart';
 import 'package:state_notifier/state_notifier.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:flutter/material.dart';
+
 final newsProvider = StateNotifierProvider((ref) => NewsState("latest"));
 final recommendedProvider = StateNotifierProvider((ref) => NewsState("recommended"));
 final historyProvider = StateNotifierProvider((ref) => NewsState("history"));
@@ -15,6 +17,7 @@ final favoriteProvider = StateNotifierProvider((ref) => NewsState("favorite"));
 final rankingMonthProvider = StateNotifierProvider((ref) => NewsState("month_ranking"));
 final rankingWeekProvider = StateNotifierProvider((ref) => NewsState("week_ranking"));
 final rankingDayProvider = StateNotifierProvider((ref) => NewsState("day_ranking"));
+final searchResultProvider = StateNotifierProvider((ref) => NewsState("search"));
 
 class NewsState extends StateNotifier<List>  {
   // NewsState() : super([]);
@@ -22,12 +25,14 @@ class NewsState extends StateNotifier<List>  {
     switch (type) {
       case "latest":
         this.getPost(true);
+        print("初期化：latest");
         break;
       case "history":
         this.initHistory("history");
         break;
       case "favorite":
         this.initHistory("favorite");
+        print("初期化：favorite");
         break;
       case "month_ranking":
         this.getRanking("monthly");
@@ -40,6 +45,10 @@ class NewsState extends StateNotifier<List>  {
         break;
       case "recommended":
         this.getRecommended();
+        print("初期化：recommend");
+        break;
+      case "search":
+        state = null;
         break;
     }
     // if (type == "latest") {
@@ -64,6 +73,9 @@ class NewsState extends StateNotifier<List>  {
 
   Box historyBox;
   Box favoriteBox;
+
+  Future _future;
+  String searchWord;
 
   void getPost(bool initFlg) async {
     //print(initFlg);
@@ -96,31 +108,44 @@ class NewsState extends StateNotifier<List>  {
     historyBox = await Hive.openBox<HistoryModel>('history');
     favoriteBox = await Hive.openBox<HistoryModel>('favorite');
 
-    for (var newsPostOne in newsPost) {
-      if (newsPostOne["readFlg"] != true) {
-        var check = historyBox.values.firstWhere(
-                (list) => list.id == newsPostOne["_id"],
-            orElse: () => null);
-        if (check == null) {
-          newsPostOne["readFlg"] = false;
-        } else {
-          newsPostOne["readFlg"] = true;
+    if (newsPost != null) {
+      if (newsPost.length != 0) {
+        for (var newsPostOne in newsPost) {
+          if (newsPostOne == null) {
+            print("aaaaaaaaaaaaa");
+            print(newsPost);
+          }
+          if (newsPostOne["readFlg"] != true) {
+            var check = historyBox.values.firstWhere(
+                    (list) => list.id == newsPostOne["_id"],
+                orElse: () => null);
+            if (check == null) {
+              newsPostOne["readFlg"] = false;
+            } else {
+              newsPostOne["readFlg"] = true;
+            }
+          }
+
+          //init favorite Flg
+          if (newsPostOne["favoriteFlg"] != true) {
+            var check = favoriteBox.values.firstWhere(
+                    (list) => list.id == newsPostOne["_id"],
+                orElse: () => null);
+            if (check == null) {
+              newsPostOne["favoriteFlg"] = false;
+            } else {
+              newsPostOne["favoriteFlg"] = true;
+              print("true"+": "+newsPostOne["titles"]);
+            }
+          }
         }
       }
 
-      //init favorite Flg
-      if (newsPostOne["favoriteFlg"] != true) {
-        var check = favoriteBox.values.firstWhere(
-                (list) => list.id == newsPostOne["_id"],
-            orElse: () => null);
-        if (check == null) {
-          newsPostOne["favoriteFlg"] = false;
-        } else {
-          newsPostOne["favoriteFlg"] = true;
-        }
-      }
     }
+    print(favoriteBox.values.toList().last.id);
     state = newsPost;
+    print(newsPost[0]["_id"]);
+    print(newsPost[0]["favoriteFlg"]);
   }
 
   Future<String> get _localPath async {
@@ -134,26 +159,36 @@ class NewsState extends StateNotifier<List>  {
   }
 
   void changeOneLatest(String id) {
-    for (var newsPostOne in newsPost) {
-      if (newsPostOne["_id"] == id) {
-          newsPostOne["readFlg"] = true;
-          state = newsPost;
+    newsPost = state;
+    if (newsPost != null) {
+      if (newsPost.length != 0) {
+        for (var newsPostOne in newsPost) {
+          if (newsPostOne["_id"] == id) {
+            newsPostOne["readFlg"] = true;
+            state = newsPost;
+          }
+        }
       }
     }
   }
 
   void changeOneFavorite(String id, bool onFlg) {
-    for (var newsPostOne in newsPost) {
-      if (newsPostOne["_id"] == id) {
-        if (onFlg) {
-          newsPostOne["favoriteFlg"] = false;
-        } else {
-          newsPostOne["favoriteFlg"] = true;
-        }
-        //print(newsPostOne["titles"]);
-        //print(newsPostOne["favoriteFlg"]);
+    newsPost = state;
+    if (newsPost != null) {
+      if (newsPost.length != 0) {
+        for (var newsPostOne in newsPost) {
+          if (newsPostOne["_id"] == id) {
+            if (onFlg) {
+              newsPostOne["favoriteFlg"] = false;
+            } else {
+              newsPostOne["favoriteFlg"] = true;
+            }
+            //print(newsPostOne["titles"]);
+            //print(newsPostOne["favoriteFlg"]);
 
-        state = newsPost;
+            state = newsPost;
+          }
+        }
       }
     }
   }
@@ -165,22 +200,67 @@ class NewsState extends StateNotifier<List>  {
     state = Items;
   }
 
-  void addHistory (HistoryModel history) {
+  void addHistory (HistoryModel history, String type) async {
     //print("add history");
-    List<HistoryModel> historyItems = state;
-    historyItems.add(history);
-    state = historyItems;
+    print(state);
+
+    // add hive data
+    final addBox = await Hive.openBox<HistoryModel>(type);
+    addBox.add(history);
+
+    // add memory data
+    if (newsPost != null) {
+      if (newsPost.length != 0) {
+        List<HistoryModel> historyItems = state;
+        historyItems.add(history);
+        state = historyItems;
+      } else {
+        print("[] です");
+        List<HistoryModel> Items = addBox.values.toList();
+        state = Items;
+      }
+    } else {
+      print("null です");
+      List<HistoryModel> Items = addBox.values.toList();
+      state = Items;
+    }
   }
 
-  void deleteHistory (String delId) {
+  void deleteHistory (String delId) async {
     //print("delete history");
-    List<HistoryModel> historyItems = state;
-    for (int index = 0; index < historyItems.length; index++) {
-      if (historyItems[index].id == delId) {
-        historyItems.removeAt(index);
+
+    // delete hive data
+    final delBox = await Hive.openBox<HistoryModel>('favorite');
+    for (int index = 0; index < delBox.length; index++) {
+      //print(index.toString() + ", " + favoriteBox.getAt(index).id);
+      if (delBox
+          .getAt(index)
+          .id == delId) {
+        delBox.deleteAt(index);
+        //break;
       }
     }
-    state = historyItems;
+
+    // delete memory data
+    if (newsPost != null) {
+      if (newsPost.length != 0) {
+        List<HistoryModel> historyItems = state;
+        for (int index = 0; index < historyItems.length; index++) {
+          if (historyItems[index].id == delId) {
+            historyItems.removeAt(index);
+          }
+        }
+        state = historyItems;
+      } else {
+        List<HistoryModel> Item = delBox.values.toList();
+        state = Item;
+      }
+    } else {
+      List<HistoryModel> Item = delBox.values.toList();
+      state = Item;
+    }
+
+
   }
 
   void getRanking (String type) async {
@@ -219,7 +299,7 @@ class NewsState extends StateNotifier<List>  {
       }
 
       var getPostURL = baseURL + "/personal?ids=" + ids;
-      //print(getPostURL);
+      print(getPostURL);
       http.Response response = await http.get(getPostURL);
       data = json
           .decode(
@@ -228,9 +308,23 @@ class NewsState extends StateNotifier<List>  {
       //print("aaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 
       newsPost = data["data"];
+      print("init");
+      print(newsPost);
     }
     _initReadFlg();
   }
 
+  void searchResultsList(String searchwords) async {
+    //String searchwords = textController.text;
+    newsPost = [];
+    //state = [];
+    var getPostURL = baseURL + "/elastic/get?words=" + searchwords;
+    print(getPostURL);
+    http.Response response = await http.get(getPostURL);
+    data = json.decode(response.body);
+
+    newsPost = data["data"];
+    _initReadFlg();
+  }
 }
 

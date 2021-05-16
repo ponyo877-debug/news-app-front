@@ -94,10 +94,10 @@ class NewsCard extends StatelessWidget {
                             this.titles,
                             this.url,
                           );
-                          _addFavorite(newfavorite);
+                          //_addFavorite(newfavorite);
                           context
                               .read(favoriteProvider.notifier)
-                              .addHistory(newfavorite);
+                              .addHistory(newfavorite, "favorite");
                         } else {
                           //print('Out ${this.titles}\'s Favorite Button!');
                           _deleteFavorite(this._id);
@@ -119,6 +119,9 @@ class NewsCard extends StatelessWidget {
                             .changeOneFavorite(this._id, this.favoriteFlg);
                         context
                             .read(recommendedProvider.notifier)
+                            .changeOneFavorite(this._id, this.favoriteFlg);
+                        context
+                            .read(searchResultProvider.notifier)
                             .changeOneFavorite(this._id, this.favoriteFlg);
                         // context
                         //     .read(historyProvider.notifier)
@@ -143,7 +146,8 @@ class NewsCard extends StatelessWidget {
                   titles,
                   url,
                 ); // int.parse(_age));
-                _addHistory(newHistory);
+                //_addHistory(newHistory);
+                _incrViewCount(_id);
                 context.read(newsProvider.notifier).changeOneLatest(_id);
                 context
                     .read(rankingMonthProvider.notifier)
@@ -151,8 +155,8 @@ class NewsCard extends StatelessWidget {
                 context.read(rankingWeekProvider.notifier).changeOneLatest(_id);
                 context.read(rankingDayProvider.notifier).changeOneLatest(_id);
                 context.read(recommendedProvider.notifier).changeOneLatest(_id);
-                context.read(historyProvider.notifier).addHistory(newHistory);
-                _incrViewCount(_id);
+                context.read(searchResultProvider.notifier).changeOneLatest(_id);
+                context.read(historyProvider.notifier).addHistory(newHistory, "history");
               },
             ),
           ),
