@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
@@ -133,13 +134,22 @@ class _MatomeWebView extends State<MatomeWebView> {
     var siteIdStr = widget.siteID.toString();
     switch (siteIdStr) {
       case '3':
-        doc = modforNewsoku(doc);
+        doc = modforNewSoku(doc);
         break;
       case '5':
-        doc = modforHimasoku(doc);
+        doc = modforHimaSoku(doc);
         break;
       case '6':
         doc = modforVipper(doc);
+        break;
+      case '7':
+        doc = modforWaraNote(doc);
+        break;
+      case '9':
+        doc = modforInazumaSoku(doc);
+        break;
+      case '10':
+        doc = modforTetsugakuNews(doc);
         break;
     }
 
@@ -154,49 +164,47 @@ class _MatomeWebView extends State<MatomeWebView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: FutureBuilder(
-        future: _loadUri(widget.selectedUrl),
-        builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
-          if (snapshot.hasData) {
-            return WebView(
-              // initialUrl: widget.selectedUrl,
-              javascriptMode: JavascriptMode.unrestricted,
-              onWebViewCreated: (WebViewController webViewController) {
-                // controller.complete(webViewController);
-                _controller = webViewController;
-                print(snapshot.data);
-                _controller.loadUrl(snapshot.data);
-                _getRecom(widget.postID);
-              },
-            );
-          } else {
-            return new Center(
-              child: new Container(
-                margin: const EdgeInsets.only(top: 8.0),
-                width: 32.0,
-                height: 32.0,
-                child: const CircularProgressIndicator(),
-              ),
-            );
-          }
-        },
-      ),
-      bottomNavigationBar: AdmobBanner(
-        adUnitId: AdMobService().getBannerAdUnitId(),
-        adSize: AdmobBannerSize(
-          width: MediaQuery.of(context).size.width.toInt(),
-          height: AdMobService().getHeight(context).toInt(),
-          name: 'BANNER',
+        appBar: AppBar(
+          title: Text(widget.title),
         ),
-      ),
-      floatingActionButton: recomPost.isNotEmpty
-          ? Builder(
-              builder: (context) => _getRecomkButton(context),
-            )
-          : null,
+        body: FutureBuilder(
+          future: _loadUri(widget.selectedUrl),
+          builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+            if (snapshot.hasData) {
+              return WebView(
+                // initialUrl: widget.selectedUrl,
+                javascriptMode: JavascriptMode.unrestricted,
+                onWebViewCreated: (WebViewController webViewController) {
+                  // controller.complete(webViewController);
+                  _controller = webViewController;
+                  print(snapshot.data);
+                  _controller.loadUrl(snapshot.data);
+                  _getRecom(widget.postID);
+                },
+              );
+            } else {
+              return new Center(
+                child: new Container(
+                  margin: const EdgeInsets.only(top: 8.0),
+                  width: 32.0,
+                  height: 32.0,
+                  child: const CircularProgressIndicator(),
+                ),
+              );
+            }
+          },
+        ),
+        bottomNavigationBar: Platform.isAndroid? AdmobBanner(
+          adUnitId: AdMobService().getBannerAdUnitId(),
+          adSize: AdmobBannerSize(
+            width: MediaQuery.of(context).size.width.toInt(),
+            height: AdMobService().getHeight(context).toInt(),
+            name: 'BANNER',
+          ),
+        ): null,
+        floatingActionButton: recomPost.isNotEmpty? Builder(
+          builder: (context) => _getRecomkButton(context),
+        ): null,
     );
   }
 
@@ -215,7 +223,7 @@ class _MatomeWebView extends State<MatomeWebView> {
           Scaffold.of(context).showBottomSheet<void>(
             (BuildContext context) {
               return Container(
-                  height: MediaQuery.of(context).size.height * 0.15,
+                  height: MediaQuery.of(context).size.height * 0.2,
                   child: ListView.builder(
                     itemCount: recomPost.length,
                     scrollDirection: Axis.horizontal,
@@ -254,7 +262,7 @@ class _MatomeWebView extends State<MatomeWebView> {
     return nextBody.querySelector('div#article-contents.article-body');
   }
 
-  dom.Document modforHimasoku(dom.Document doc) {
+  dom.Document modforHimaSoku(dom.Document doc) {
     var temp = doc.body.querySelector('div.article_mid_v2');
     if (temp != null) {
       temp.remove();
@@ -270,7 +278,7 @@ class _MatomeWebView extends State<MatomeWebView> {
     return doc;
   }
 
-  dom.Document modforNewsoku(dom.Document doc) {
+  dom.Document modforNewSoku(dom.Document doc) {
     var temp = doc.body.querySelector(
         'script[src="https://blogroll.livedoor.net/js/blogroll.js"]');
     if (temp != null) {
@@ -297,6 +305,73 @@ class _MatomeWebView extends State<MatomeWebView> {
     return doc;
   }
 
+  // TODO: Need to implement
+  dom.Document modforWaraNote(dom.Document doc) {
+    // Delete: div class "amazon Default"
+    // Delete: a[href][target="_blank"]:not([class]):not([href="^https://livedoor.blogimg.jp/waranote2/imgs/"])
+    var temp = doc.body.querySelector('div.amazon.Default');
+    if (temp != null) {
+      temp.remove();
+    }
+    temp = doc.body.querySelector('span[style="color:#006600"]');
+    if (temp != null) {
+      temp.remove();
+    }
+    var scriptTag = doc.body.querySelectorAll('a[href][title]:not([class])');
+    var scriptTagwithBR = doc.body.querySelectorAll('br');
+    var allbrcount = scriptTagwithBR.length;
+    for (int i = 0; i < scriptTag.length; i++) {
+      var hrefurl = scriptTag[i].attributes['href'];
+      if (!hrefurl.startsWith('https://livedoor.blogimg.jp/waranote2/imgs/')) {
+        doc.body.querySelector('a[href="$hrefurl"]').remove();
+        scriptTagwithBR[allbrcount - (2 * i + 1)].remove();
+        scriptTagwithBR[allbrcount - (2 * i + 2)].remove();
+      }
+    }
+    scriptTag = doc.body.querySelectorAll('a[href][target="_blank"]:not([class])');
+    scriptTagwithBR = doc.body.querySelectorAll('br');
+    allbrcount = scriptTagwithBR.length;
+    for (int i = 0; i < scriptTag.length; i++) {
+      var hrefurl = scriptTag[i].attributes['href'];
+      if (!hrefurl.startsWith('https://livedoor.blogimg.jp/waranote2/imgs/')) {
+        doc.body.querySelector('a[href="$hrefurl"]').remove();
+        scriptTagwithBR[allbrcount - (2 * i + 1)].remove();
+        scriptTagwithBR[allbrcount - (2 * i + 2)].remove();
+      }
+    }
+    var length_for_delete = scriptTagwithBR.length;
+    for (int i = 0; i < 6; i++){
+      scriptTagwithBR[length_for_delete - (i + 1)].remove();
+    }
+    return doc;
+  }
+
+  // TODO: Need to implement
+  dom.Document modforInazumaSoku(dom.Document doc) {
+    // Detele: div class ika2
+    // Delete: ul id anop
+    var temp = doc.body.querySelector('div.ika2');
+    if (temp != null) {
+      temp.remove();
+    }
+    temp = doc.body.querySelector('ul#anop');
+    if (temp != null) {
+      temp.remove();
+    }
+    return doc;
+  }
+
+  // TODO: Need to implement
+  dom.Document modforTetsugakuNews(dom.Document doc) {
+    // Delete: span style="font-size: large;"
+    var temp = doc.body.querySelector('span[style="font-size: large;"]');
+    if (temp != null) {
+      temp.remove();
+    }
+    return doc;
+  }
+
+
   Future<String> _loadUri(loaduri) async {
     String userAgent, _decode_charset;
     try {
@@ -307,7 +382,11 @@ class _MatomeWebView extends State<MatomeWebView> {
     }
     if (Platform.isIOS) {
       userAgent =
+<<<<<<< HEAD
           'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1';
+=======
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1';
+>>>>>>> f56f60e7d980cf21b77425e31ecffb3905fc44cf
     }
     var response = await http.Client()
         .get(Uri.parse(loaduri), headers: {'User-Agent': userAgent});
@@ -357,6 +436,10 @@ class _MatomeWebView extends State<MatomeWebView> {
       // print("userAgent: ${userAgent}");
     } on PlatformException {
       userAgent = '<error>';
+    }
+    if (Platform.isIOS) {
+      userAgent =
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1';
     }
     var response = await http.Client()
         .get(Uri.parse(loaduri), headers: {'User-Agent': userAgent});
