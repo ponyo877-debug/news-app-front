@@ -134,13 +134,22 @@ class _MatomeWebView extends State<MatomeWebView> {
     var siteIdStr = widget.siteID.toString();
     switch (siteIdStr) {
       case '3':
-        doc = modforNewsoku(doc);
+        doc = modforNewSoku(doc);
         break;
       case '5':
-        doc = modforHimasoku(doc);
+        doc = modforHimaSoku(doc);
         break;
       case '6':
         doc = modforVipper(doc);
+        break;
+      case '7':
+        doc = modforWaraNote(doc);
+        break;
+      case '9':
+        doc = modforInazumaSoku(doc);
+        break;
+      case '10':
+        doc = modforTetsugakuNews(doc);
         break;
     }
 
@@ -253,7 +262,7 @@ class _MatomeWebView extends State<MatomeWebView> {
     return nextBody.querySelector('div#article-contents.article-body');
   }
 
-  dom.Document modforHimasoku(dom.Document doc) {
+  dom.Document modforHimaSoku(dom.Document doc) {
     var temp = doc.body.querySelector('div.article_mid_v2');
     if (temp != null) {
       temp.remove();
@@ -269,7 +278,7 @@ class _MatomeWebView extends State<MatomeWebView> {
     return doc;
   }
 
-  dom.Document modforNewsoku(dom.Document doc) {
+  dom.Document modforNewSoku(dom.Document doc) {
     var temp = doc.body.querySelector(
         'script[src="https://blogroll.livedoor.net/js/blogroll.js"]');
     if (temp != null) {
@@ -295,6 +304,73 @@ class _MatomeWebView extends State<MatomeWebView> {
     }
     return doc;
   }
+
+  // TODO: Need to implement
+  dom.Document modforWaraNote(dom.Document doc) {
+    // Delete: div class "amazon Default"
+    // Delete: a[href][target="_blank"]:not([class]):not([href="^https://livedoor.blogimg.jp/waranote2/imgs/"])
+    var temp = doc.body.querySelector('div.amazon.Default');
+    if (temp != null) {
+      temp.remove();
+    }
+    temp = doc.body.querySelector('span[style="color:#006600"]');
+    if (temp != null) {
+      temp.remove();
+    }
+    var scriptTag = doc.body.querySelectorAll('a[href][title]:not([class])');
+    var scriptTagwithBR = doc.body.querySelectorAll('br');
+    var allbrcount = scriptTagwithBR.length;
+    for (int i = 0; i < scriptTag.length; i++) {
+      var hrefurl = scriptTag[i].attributes['href'];
+      if (!hrefurl.startsWith('https://livedoor.blogimg.jp/waranote2/imgs/')) {
+        doc.body.querySelector('a[href="$hrefurl"]').remove();
+        scriptTagwithBR[allbrcount - (2 * i + 1)].remove();
+        scriptTagwithBR[allbrcount - (2 * i + 2)].remove();
+      }
+    }
+    scriptTag = doc.body.querySelectorAll('a[href][target="_blank"]:not([class])');
+    scriptTagwithBR = doc.body.querySelectorAll('br');
+    allbrcount = scriptTagwithBR.length;
+    for (int i = 0; i < scriptTag.length; i++) {
+      var hrefurl = scriptTag[i].attributes['href'];
+      if (!hrefurl.startsWith('https://livedoor.blogimg.jp/waranote2/imgs/')) {
+        doc.body.querySelector('a[href="$hrefurl"]').remove();
+        scriptTagwithBR[allbrcount - (2 * i + 1)].remove();
+        scriptTagwithBR[allbrcount - (2 * i + 2)].remove();
+      }
+    }
+    var length_for_delete = scriptTagwithBR.length;
+    for (int i = 0; i < 6; i++){
+      scriptTagwithBR[length_for_delete - (i + 1)].remove();
+    }
+    return doc;
+  }
+
+  // TODO: Need to implement
+  dom.Document modforInazumaSoku(dom.Document doc) {
+    // Detele: div class ika2
+    // Delete: ul id anop
+    var temp = doc.body.querySelector('div.ika2');
+    if (temp != null) {
+      temp.remove();
+    }
+    temp = doc.body.querySelector('ul#anop');
+    if (temp != null) {
+      temp.remove();
+    }
+    return doc;
+  }
+
+  // TODO: Need to implement
+  dom.Document modforTetsugakuNews(dom.Document doc) {
+    // Delete: span style="font-size: large;"
+    var temp = doc.body.querySelector('span[style="font-size: large;"]');
+    if (temp != null) {
+      temp.remove();
+    }
+    return doc;
+  }
+
 
   Future<String> _loadUri(loaduri) async {
     String userAgent, _decode_charset;
