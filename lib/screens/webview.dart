@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'news_card.dart';
+import 'news_list_screen.dart';
 
 // import 'package:charset_converter/charset_converter.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +16,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 import '../service/admob.dart';
 import 'package:admob_flutter/admob_flutter.dart';
+import 'package:flutter_share/flutter_share.dart';
 
 // WebViewController _controller;
 class MatomeWebView extends StatefulWidget {
@@ -42,6 +44,11 @@ class _MatomeWebView extends State<MatomeWebView> {
   List recomPost = [];
   bool isOpen = false;
   double dist_threshold = 0.1;
+
+  final List<TabInfo> _tabs = [
+    TabInfo(Icons.share, 'Share', null),
+    TabInfo(Icons.report, 'Report article problem', null),
+  ];
 
   Future _getRecom(String postID) async {
     var getRecomURL = baseURL + "/recom/" + postID;
@@ -166,6 +173,41 @@ class _MatomeWebView extends State<MatomeWebView> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
+        actions: <Widget>[
+          PopupMenuButton(
+            onSelected: (String s) async {
+              if (s == _tabs[0].title) {
+                await FlutterShare.share(
+                    title: widget.title,
+                    text: "title: " + widget.title,
+                    linkUrl: "URL: " + widget.selectedUrl,
+                );
+              } else if (s == _tabs[1].title) {
+                var linkTitle = Uri.encodeComponent(widget.title);
+                var link = Uri.encodeComponent(widget.selectedUrl);
+                var url = "https://docs.google.com/forms/d/e/1FAIpQLSdbHG9M2IVrL1YTXg6pL1pk1GaDeUhm3_105Epp1UCjWO525w/viewform?usp=pp_url&entry.126191999=title%EF%BC%9A"+linkTitle+"%0AURL%EF%BC%9A"+link;
+                  await Navigator.of(context).push(MaterialPageRoute(
+                      builder: (context) => NormalWebView(
+                        title: s,
+                        selectedUrl: url,
+                      )));
+              }
+            },
+              itemBuilder: (BuildContext context) {
+                return _tabs.map((tab) {
+                  return PopupMenuItem(
+                    //child: tab.widget,
+                    child: Row (children: <Widget>[Icon(tab.icon),SizedBox(width: 10), Text(tab.title)]),
+                    // child: ListTile(
+                    //   leading: Icon(tab.icon),
+                    //     title:Text(tab.title),
+                    // ),
+                    value: tab.title,
+                  );
+                }).toList();
+              }
+          )
+        ],
       ),
       body: FutureBuilder(
         future: _loadUri(widget.selectedUrl),
