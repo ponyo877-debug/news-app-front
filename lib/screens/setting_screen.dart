@@ -69,16 +69,15 @@ class SettingScreen extends StatelessWidget {
         separatorBuilder: (BuildContext context, int index) =>
             Divider(color: Colors.white),
         itemBuilder: (BuildContext context, int index) {
+          var isAppVer = _settingTabs[index].title.contains('App Version');
           return ListTile(
             leading: Icon(_settingTabs[index].icon),
             title: Text(
               _settingTabs[index].title,
               style: TextStyle(fontSize: 20),
             ),
-            trailing: _settingTabs[index].title.contains('Version')
-                ? null
-                : Icon(Icons.keyboard_arrow_right),
-            onTap: _settingTabs[index].title.contains('Version')
+            trailing: isAppVer ? null : Icon(Icons.keyboard_arrow_right),
+            onTap: isAppVer
                 ? null
                 : () async {
                     await Navigator.of(context).push(MaterialPageRoute(
