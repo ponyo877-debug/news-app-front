@@ -12,7 +12,9 @@ class SettingInfo {
 class SettingScreen extends StatelessWidget {
   SettingScreen._internal();
   String _contactURL;
+  String _eulaURL;
   String _PPURL;
+  String _reportURL;
   List<SettingInfo> _settingTabs;
 
   factory SettingScreen() {
@@ -20,9 +22,26 @@ class SettingScreen extends StatelessWidget {
     _settingScreen._contactURL =
         "https://docs.google.com/forms/d/e/1FAIpQLSd-fuupDifDoJQ1uTkdyUCgzEiNvfUzdJe0YOhPfdSC3U2Erw/viewform?usp=sf_link";
     _settingScreen._PPURL = "http://gitouhon-juku-k8s2.ga/privacy_policy/";
+    _settingScreen._eulaURL = "http://gitouhon-juku-k8s2.ga/eula/";
+    _settingScreen._reportURL =
+        "https://docs.google.com/forms/d/e/1FAIpQLSfKg5WOizYtdmAUdTUGvGoOTxHeARTzyiomS6fSiV8f6DfFVQ/viewform?usp=sf_link";
 
     _settingScreen._settingTabs = [
       SettingInfo(Icons.select_all, 'Select Site', SelectSites()),
+      SettingInfo(
+          Icons.privacy_tip_outlined,
+          'Privacy Policy',
+          NormalWebView(
+            title: "Privacy Policy",
+            selectedUrl: _settingScreen._PPURL,
+          )),
+      SettingInfo(
+          Icons.privacy_tip_outlined,
+          'EULA',
+          NormalWebView(
+            title: "EULA",
+            selectedUrl: _settingScreen._eulaURL,
+          )),
       SettingInfo(
           Icons.email_outlined,
           'Contact Us',
@@ -31,12 +50,13 @@ class SettingScreen extends StatelessWidget {
             selectedUrl: _settingScreen._contactURL,
           )),
       SettingInfo(
-          Icons.privacy_tip_outlined,
-          'Privacy Policy',
+          Icons.email_outlined,
+          'Help & Feedback',
           NormalWebView(
-            title: "Privacy Policy",
-            selectedUrl: _settingScreen._PPURL,
+            title: "Help & Feedback",
+            selectedUrl: _settingScreen._reportURL,
           )),
+      SettingInfo(Icons.arrow_circle_up, 'App Version: 1.30', null),
     ];
     return _settingScreen;
   }
@@ -55,11 +75,15 @@ class SettingScreen extends StatelessWidget {
               _settingTabs[index].title,
               style: TextStyle(fontSize: 20),
             ),
-            trailing: Icon(Icons.keyboard_arrow_right),
-            onTap: () async {
-              await Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => _settingTabs[index].widget));
-            },
+            trailing: _settingTabs[index].title.contains('Version')
+                ? null
+                : Icon(Icons.keyboard_arrow_right),
+            onTap: _settingTabs[index].title.contains('Version')
+                ? null
+                : () async {
+                    await Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => _settingTabs[index].widget));
+                  },
           );
         },
       ),
