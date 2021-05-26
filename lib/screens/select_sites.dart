@@ -6,12 +6,16 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 
-class SelectSites extends StatefulWidget {
-  @override
-  _SelectSites createState() => _SelectSites();
-}
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'site_state.dart';
+import 'news_state.dart';
 
-class _SelectSites extends State<SelectSites>{
+class SelectSites extends StatelessWidget {
+//   @override
+//   _SelectSites createState() => _SelectSites();
+// }
+
+// class _SelectSites extends State<SelectSites>{
 
   Future<bool> _future;
 
@@ -24,23 +28,18 @@ class _SelectSites extends State<SelectSites>{
   static const String kFileName = 'mySkipIDs.csv';
   bool _fileExists = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _future = _getInitSiteList();
-  }
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   _future = _getInitSiteList();
+  // }
 
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: (){
-        String _newData = '';
-        for (int i = 0; i < newsList.length; i++) {
-          if (newsList[i]["switchValue"] == false) {
-            _newData = '$_newData${newsList[i]["siteID"]},';
-          }
-        }
-        _writeJson(_newData);
+        context.read(selectSiteProvider.notifier).writeJson();
+        context.read(newsProvider.notifier).getPost(true);
         Navigator.pop(context);
         return Future.value(false);
       },
@@ -48,11 +47,10 @@ class _SelectSites extends State<SelectSites>{
         appBar: AppBar(
           title: Text('表示サイトの選択'),
         ),
-        body: FutureBuilder(
-          future: _future,
-          builder: (BuildContext context, AsyncSnapshot snapshot) {
+        body: Consumer(builder: (context, watch, _) {
+          final list = watch(selectSiteProvider);
             Widget childWidget;
-            if (!snapshot.hasData) {
+            if (list.length == 0) {
               childWidget = Center(child: CircularProgressIndicator());
             } else {
               childWidget = ListView.builder(
@@ -64,24 +62,22 @@ class _SelectSites extends State<SelectSites>{
                         ),
                       ),
                       child: SwitchListTile(
-                        value: newsList[index]["switchValue"],
+                        value: list[index]["switchValue"],
                         title: Text(
-                          "${newsList[index]["sitetitle"]}",
+                          "${list[index]["sitetitle"]}",
                           style: TextStyle(
                             //fontWeight: FontWeight.bold,
                             //fontFamily: 'Cursive',
                           ),
                         ),
                         onChanged: (bool value) {
-                          setState(() {
-                            newsList[index]["switchValue"] = value;
-                          });
+                          context.read(selectSiteProvider.notifier).changeSiteList(list[index]["siteID"], value);
                         },
-                        secondary: thumbnail(newsList[index]["image"]),
+                        secondary: thumbnail(list[index]["image"]),
                       )
                   );
                 },
-                itemCount: newsList.length,
+                itemCount: list.length,
               );
             }
             return childWidget;
@@ -91,40 +87,40 @@ class _SelectSites extends State<SelectSites>{
     );
   }
 
-  Future<bool> _getInitSiteList() async {
-
-    var getSiteList = baseURL + "/site/get";
-    http.Response response = await http.get(getSiteList);
-    data = json.decode(response.body);
-    if (mounted) {
-      setState(() {
-        newsList = data["data"];
-      });
-    }
-
-    //read File
-    _filePath = await _localFile;
-    _fileExists = await _filePath.exists();
-
-    if (!_fileExists) {
-      for (int i = 0; i < newsList.length; i++) {
-        newsList[i]["switchValue"] = true;
-      }
-    } else {
-      var _fileData = await _filePath.readAsString();
-      for (int i = 0; i < newsList.length; i++) {
-        var siteID = _fileData.split(",");
-        var flgSite = true;
-        for (int j = 0; j < siteID.length; j++) {
-          if (newsList[i]["siteID"].toString() == siteID[j].toString() ) {
-            flgSite = false;
-          }
-        }
-        newsList[i]["switchValue"] = flgSite;
-      }
-    }
-    return true;
-  }
+  // Future<bool> _getInitSiteList() async {
+  //
+  //   var getSiteList = baseURL + "/site/get";
+  //   http.Response response = await http.get(getSiteList);
+  //   data = json.decode(response.body);
+  //   if (mounted) {
+  //     setState(() {
+  //       newsList = data["data"];
+  //     });
+  //   }
+  //
+  //   //read File
+  //   _filePath = await _localFile;
+  //   _fileExists = await _filePath.exists();
+  //
+  //   if (!_fileExists) {
+  //     for (int i = 0; i < newsList.length; i++) {
+  //       newsList[i]["switchValue"] = true;
+  //     }
+  //   } else {
+  //     var _fileData = await _filePath.readAsString();
+  //     for (int i = 0; i < newsList.length; i++) {
+  //       var siteID = _fileData.split(",");
+  //       var flgSite = true;
+  //       for (int j = 0; j < siteID.length; j++) {
+  //         if (newsList[i]["siteID"].toString() == siteID[j].toString() ) {
+  //           flgSite = false;
+  //         }
+  //       }
+  //       newsList[i]["switchValue"] = flgSite;
+  //     }
+  //   }
+  //   return true;
+  // }
 
   thumbnail(imageUrl) {
     return Padding(
@@ -143,23 +139,23 @@ class _SelectSites extends State<SelectSites>{
     );
   }
 
-  Future<String> get _localPath async {
-    final directory = await getApplicationDocumentsDirectory();
-    return directory.path;
-  }
-
-  Future<File> get _localFile async {
-    final path = await _localPath;
-    return File('$path/$kFileName');
-  }
-
-  void _writeJson(String _newData) async {
-    _filePath = await _localFile;
-    _fileExists = await _filePath.exists();
-
-    if (!_fileExists) {
-       _filePath.writeAsString('');
-    }
-    _filePath.writeAsString(_newData);
-  }
+  // Future<String> get _localPath async {
+  //   final directory = await getApplicationDocumentsDirectory();
+  //   return directory.path;
+  // }
+  //
+  // Future<File> get _localFile async {
+  //   final path = await _localPath;
+  //   return File('$path/$kFileName');
+  // }
+  //
+  // void _writeJson(String _newData) async {
+  //   _filePath = await _localFile;
+  //   _fileExists = await _filePath.exists();
+  //
+  //   if (!_fileExists) {
+  //      _filePath.writeAsString('');
+  //   }
+  //   _filePath.writeAsString(_newData);
+  // }
 }

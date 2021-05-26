@@ -8,6 +8,14 @@ import 'models/history_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'news_state.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'news_list_screen.dart';
+import 'site_state.dart';
+
+class NewsCardInfo {
+  Icon icon;
+  String title;
+  NewsCardInfo(this.icon, this.title,);
+}
 
 class NewsCard extends StatelessWidget {
   String _id;
@@ -30,26 +38,14 @@ class NewsCard extends StatelessWidget {
     historyBox.add(historyModel);
   }
 
-  Future _addFavorite(HistoryModel historyModel) async {
-    final favoriteBox = await Hive.openBox<HistoryModel>('favorite');
-    favoriteBox.add(historyModel);
-    print(favoriteBox.length);
-  }
-
-  Future _deleteFavorite(String FavoriteId) async {
-    final favoriteBox = await Hive.openBox<HistoryModel>('favorite');
-    for (int index = 0; index < favoriteBox.length; index++) {
-      //print(index.toString() + ", " + favoriteBox.getAt(index).id);
-      if (favoriteBox.getAt(index).id == FavoriteId) {
-        favoriteBox.deleteAt(index);
-        //break;
-      }
-    }
-    //print(favoriteBox.length);
-  }
-
   @override
   Widget build(BuildContext context) {
+    final List<NewsCardInfo> _detailList = [
+      NewsCardInfo(Icon(this.favoriteFlg ? Icons.favorite : Icons.favorite_border,
+          color: this.favoriteFlg ? Colors.red : null),'Favorite'),
+      NewsCardInfo(Icon(Icons.block), 'Block this site'),
+      NewsCardInfo(Icon(Icons.report), 'Report this article'),
+    ];
     //bloc = NewsBlocProvider.of(context).bloc;
     return Card(
       child: Column(
@@ -73,61 +69,58 @@ class NewsCard extends StatelessWidget {
               // TODO: Need to implement favorite button
               trailing: this.publishedAt != ""
                   ? InkWell(
-                  // ? IconButton(
+                      // ? IconButton(
                       // iconSize: 5,
-                      child: Icon(
-                      // icon: Icon(
-                          this.favoriteFlg
-                              ? Icons.favorite
-                              : Icons.favorite_border,
-                          color: this.favoriteFlg ? Colors.red : null),
+                      child: Icon(Icons.more_vert),
                       //onPressed: () {
-                      onTap: () {
-                        if (!this.favoriteFlg) {
-                          //print('In ${this.titles}\'s Favorite Button!');
-                          final newfavorite = HistoryModel(
-                            this._id,
-                            this.image,
-                            this.publishedAt,
-                            this.siteID,
-                            this.sitetitle,
-                            this.titles,
-                            this.url,
-                          );
-                          //_addFavorite(newfavorite);
-                          context
-                              .read(favoriteProvider.notifier)
-                              .addHistory(newfavorite, "favorite");
-                        } else {
-                          //print('Out ${this.titles}\'s Favorite Button!');
-                          _deleteFavorite(this._id);
-                          context
-                              .read(favoriteProvider.notifier)
-                              .deleteHistory(this._id);
-                        }
-                        context
-                            .read(newsProvider.notifier)
-                            .changeOneFavorite(this._id, this.favoriteFlg);
-                        context
-                            .read(rankingMonthProvider.notifier)
-                            .changeOneFavorite(this._id, this.favoriteFlg);
-                        context
-                            .read(rankingWeekProvider.notifier)
-                            .changeOneFavorite(this._id, this.favoriteFlg);
-                        context
-                            .read(rankingDayProvider.notifier)
-                            .changeOneFavorite(this._id, this.favoriteFlg);
-                        context
-                            .read(recommendedProvider.notifier)
-                            .changeOneFavorite(this._id, this.favoriteFlg);
-                        context
-                            .read(searchResultProvider.notifier)
-                            .changeOneFavorite(this._id, this.favoriteFlg);
-                        // context
-                        //     .read(historyProvider.notifier)
-                        //     .changeOneFavorite(this._id, this.favoriteFlg);
-                      },
-                    )
+                      onTap: () async {
+                        await showModalBottomSheet<void>(
+                            context: context,
+                            backgroundColor: Colors.blueGrey,
+                            isScrollControlled: true,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
+                            ),
+                            builder: (BuildContext context) {
+                              return Row (
+                                mainAxisSize: MainAxisSize.max,
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [Container(
+                                  //color: Colors.red,
+                                  //width: MediaQuery.of(context).size.width,
+                                 height: MediaQuery.of(context).size.width /
+                                     _detailList.length,
+                                child: ListView.builder (
+                                    shrinkWrap: true,
+                                    physics: const NeverScrollableScrollPhysics(),
+                                    scrollDirection: Axis.horizontal,
+                              itemCount: _detailList.length,
+                              itemBuilder: (BuildContext context, int index) {
+                              return SizedBox( width: MediaQuery.of(context).size.width/_detailList.length,
+                                child: InkResponse(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                              children: [CircleAvatar(radius:30, backgroundColor:Colors.white, child:_detailList[index].icon), SizedBox(height: 10), Text(_detailList[index].title)],
+                              ),
+                              onTap: () {
+                              if (index == 0) {
+                                Navigator.pop(context);
+                              _clickFavorite(context);
+                              } else if (index == 1) {
+                              _clickBlockSite(context);
+                              Navigator.pop(context);
+                              } else if (index == 2) {
+                                Navigator.pop(context);
+                              _clickReport(context);
+                              }
+                              }
+                              ),);
+                              }),
+                              )],
+                              );
+                                    }
+                            );
+                      })
                   : null,
               onTap: () {
                 Navigator.of(context).push(MaterialPageRoute(
@@ -155,14 +148,86 @@ class NewsCard extends StatelessWidget {
                 context.read(rankingWeekProvider.notifier).changeOneLatest(_id);
                 context.read(rankingDayProvider.notifier).changeOneLatest(_id);
                 context.read(recommendedProvider.notifier).changeOneLatest(_id);
-                context.read(searchResultProvider.notifier).changeOneLatest(_id);
-                context.read(historyProvider.notifier).addHistory(newHistory, "history");
+                context
+                    .read(searchResultProvider.notifier)
+                    .changeOneLatest(_id);
+                context
+                    .read(historyProvider.notifier)
+                    .addHistory(newHistory, "history");
               },
             ),
           ),
         ],
       ),
     );
+  }
+
+  void _clickFavorite(BuildContext context) {
+    if (!this.favoriteFlg) {
+      //print('In ${this.titles}\'s Favorite Button!');
+      final newfavorite = HistoryModel(
+        this._id,
+        this.image,
+        this.publishedAt,
+        this.siteID,
+        this.sitetitle,
+        this.titles,
+        this.url,
+      );
+      //_addFavorite(newfavorite);
+      context
+          .read(favoriteProvider.notifier)
+          .addHistory(newfavorite, "favorite");
+    } else {
+      //print('Out ${this.titles}\'s Favorite Button!');
+      //_deleteFavorite(this._id);
+      context.read(favoriteProvider.notifier).deleteHistory(this._id);
+    }
+    context
+        .read(newsProvider.notifier)
+        .changeOneFavorite(this._id, this.favoriteFlg);
+    context
+        .read(rankingMonthProvider.notifier)
+        .changeOneFavorite(this._id, this.favoriteFlg);
+    context
+        .read(rankingWeekProvider.notifier)
+        .changeOneFavorite(this._id, this.favoriteFlg);
+    context
+        .read(rankingDayProvider.notifier)
+        .changeOneFavorite(this._id, this.favoriteFlg);
+    context
+        .read(recommendedProvider.notifier)
+        .changeOneFavorite(this._id, this.favoriteFlg);
+    context
+        .read(searchResultProvider.notifier)
+        .changeOneFavorite(this._id, this.favoriteFlg);
+    // context
+    //     .read(historyProvider.notifier)
+    //     .changeOneFavorite(this._id, this.favoriteFlg);
+  }
+
+  void _clickBlockSite(BuildContext context) {
+    context
+        .read(selectSiteProvider.notifier)
+        .changeSiteList(int.parse(this.siteID), false);
+    context.read(selectSiteProvider.notifier).writeJson();
+    context.read(newsProvider.notifier).getPost(true);
+  }
+
+  void _clickReport(BuildContext context) async {
+    var linkTitle = Uri.encodeComponent(this.titles);
+    var link = Uri.encodeComponent(this.url);
+    var url =
+        "https://docs.google.com/forms/d/e/1FAIpQLSdbHG9M2IVrL1YTXg6pL1pk1GaDeUhm3_105Epp1UCjWO525w/viewform?usp=pp_url&entry.126191999=title%EF%BC%9A" +
+            linkTitle +
+            "%0AURL%EF%BC%9A" +
+            link;
+    print(url);
+    await Navigator.of(context).push(MaterialPageRoute(
+        builder: (context) => NormalWebView(
+              title: "Report this article",
+              selectedUrl: url,
+            )));
   }
 
   title(title, color, readFlg) {
