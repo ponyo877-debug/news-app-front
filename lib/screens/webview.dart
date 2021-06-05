@@ -44,6 +44,7 @@ class _MatomeWebView extends State<MatomeWebView> {
   List recomPost = [];
   bool isOpen = false;
   double dist_threshold = 0.1;
+  bool _isExpanded = false;
 
   final List<TabInfo> _tabs = [
     TabInfo(Icons.share, 'Share', null),
@@ -213,16 +214,56 @@ class _MatomeWebView extends State<MatomeWebView> {
         future: _loadUri(widget.selectedUrl),
         builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
           if (snapshot.hasData) {
-            return WebView(
-              // initialUrl: widget.selectedUrl,
-              javascriptMode: JavascriptMode.unrestricted,
-              onWebViewCreated: (WebViewController webViewController) {
-                // controller.complete(webViewController);
-                _controller = webViewController;
-                print(snapshot.data);
-                _controller.loadUrl(snapshot.data);
-                _getRecom(widget.postID);
-              },
+            return Column (
+                mainAxisSize: MainAxisSize.max,
+                children: [Container(
+              height: _isExpanded ? MediaQuery.of(context).size.height / 3 * 2 :
+              MediaQuery.of(context).size.height / 3,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.blueGrey, width: 5),
+                      borderRadius: BorderRadius.all(Radius.circular(25)),
+          ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.all(Radius.circular(20)),
+                    child: GestureDetector(child: WebView(
+                      // initialUrl: widget.selectedUrl,
+                      javascriptMode: JavascriptMode.unrestricted,
+                      onWebViewCreated: (WebViewController webViewController) {
+                        // controller.complete(webViewController);
+                        _controller = webViewController;
+                        print(snapshot.data);
+                        _controller.loadUrl(snapshot.data);
+                        _getRecom(widget.postID);
+                      },
+                    ),
+                      onTapDown: (details) {
+            print("test");
+            setState(() {
+              print(_isExpanded);
+              _isExpanded = true;
+            });
+                      return false;
+          },
+                      behavior: HitTestBehavior.opaque,
+                    ),
+                  ),
+            ),
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        print(_isExpanded);
+                        _isExpanded = !_isExpanded;
+                      });
+                    },
+                    child: Text(
+                        _isExpanded ? 'コメントを開く' : '記事を開く'
+                    ),
+                  ),
+            Card(
+                //height: MediaQuery.of(context).size.height / 2 - AdMobService().getHeight(context).toInt(),
+              color: Colors.amberAccent,
+              child: Text("コメントが入る場所"),
+          )]
             );
           } else {
             return new Center(

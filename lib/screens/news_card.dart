@@ -14,7 +14,10 @@ import 'site_state.dart';
 class NewsCardInfo {
   Icon icon;
   String title;
-  NewsCardInfo(this.icon, this.title,);
+  NewsCardInfo(
+    this.icon,
+    this.title,
+  );
 }
 
 class NewsCard extends StatelessWidget {
@@ -40,12 +43,6 @@ class NewsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final List<NewsCardInfo> _detailList = [
-      NewsCardInfo(Icon(this.favoriteFlg ? Icons.favorite : Icons.favorite_border,
-          color: this.favoriteFlg ? Colors.red : null),'Favorite'),
-      NewsCardInfo(Icon(Icons.block), 'Block this site'),
-      NewsCardInfo(Icon(Icons.report), 'Report this article'),
-    ];
     //bloc = NewsBlocProvider.of(context).bloc;
     return Card(
       child: Column(
@@ -73,54 +70,7 @@ class NewsCard extends StatelessWidget {
                       // iconSize: 5,
                       child: Icon(Icons.more_vert),
                       //onPressed: () {
-                      onTap: () async {
-                        await showModalBottomSheet<void>(
-                            context: context,
-                            backgroundColor: Colors.blueGrey,
-                            isScrollControlled: true,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
-                            ),
-                            builder: (BuildContext context) {
-                              return Row (
-                                mainAxisSize: MainAxisSize.max,
-                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                children: [Container(
-                                  //color: Colors.red,
-                                  //width: MediaQuery.of(context).size.width,
-                                 height: MediaQuery.of(context).size.width /
-                                     _detailList.length,
-                                child: ListView.builder (
-                                    shrinkWrap: true,
-                                    physics: const NeverScrollableScrollPhysics(),
-                                    scrollDirection: Axis.horizontal,
-                              itemCount: _detailList.length,
-                              itemBuilder: (BuildContext context, int index) {
-                              return SizedBox( width: MediaQuery.of(context).size.width/_detailList.length,
-                                child: InkResponse(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                              children: [CircleAvatar(radius:30, backgroundColor:Colors.white, child:_detailList[index].icon), SizedBox(height: 10), Text(_detailList[index].title)],
-                              ),
-                              onTap: () {
-                              if (index == 0) {
-                                Navigator.pop(context);
-                              _clickFavorite(context);
-                              } else if (index == 1) {
-                              _clickBlockSite(context);
-                              Navigator.pop(context);
-                              } else if (index == 2) {
-                                Navigator.pop(context);
-                              _clickReport(context);
-                              }
-                              }
-                              ),);
-                              }),
-                              )],
-                              );
-                                    }
-                            );
-                      })
+                      onTap: () => newsDetail(context))
                   : null,
               onTap: () {
                 Navigator.of(context).push(MaterialPageRoute(
@@ -160,6 +110,73 @@ class NewsCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future newsDetail(BuildContext context) async {
+    final List<NewsCardInfo> _detailList = [
+      NewsCardInfo(
+          Icon(this.favoriteFlg ? Icons.favorite : Icons.favorite_border,
+              color: this.favoriteFlg ? Colors.red : null),
+          'Favorite'),
+      NewsCardInfo(Icon(Icons.block), 'Block this site'),
+      NewsCardInfo(Icon(Icons.report), 'Report this article'),
+    ];
+    return await showModalBottomSheet<void>(
+        context: context,
+        backgroundColor: Colors.blueGrey,
+        isScrollControlled: true,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
+        ),
+        builder: (BuildContext context) {
+          return Row(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Container(
+                //color: Colors.red,
+                //width: MediaQuery.of(context).size.width,
+                height: MediaQuery.of(context).size.width / _detailList.length,
+                child: ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _detailList.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      return SizedBox(
+                        width: MediaQuery.of(context).size.width /
+                            _detailList.length,
+                        child: InkResponse(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                CircleAvatar(
+                                    radius: 30,
+                                    backgroundColor: Colors.white,
+                                    child: _detailList[index].icon),
+                                SizedBox(height: 10),
+                                Text(_detailList[index].title)
+                              ],
+                            ),
+                            onTap: () {
+                              if (index == 0) {
+                                Navigator.pop(context);
+                                _clickFavorite(context);
+                                newsDetail(context);
+                              } else if (index == 1) {
+                                _clickBlockSite(context);
+                                //Navigator.pop(context);
+                              } else if (index == 2) {
+                                //Navigator.pop(context);
+                                _clickReport(context);
+                              }
+                            }),
+                      );
+                    }),
+              )
+            ],
+          );
+        });
   }
 
   void _clickFavorite(BuildContext context) {
@@ -204,6 +221,7 @@ class NewsCard extends StatelessWidget {
     // context
     //     .read(historyProvider.notifier)
     //     .changeOneFavorite(this._id, this.favoriteFlg);
+    this.favoriteFlg = !this.favoriteFlg;
   }
 
   void _clickBlockSite(BuildContext context) {
