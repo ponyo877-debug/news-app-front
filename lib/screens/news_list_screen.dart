@@ -4,7 +4,12 @@ import 'ranking_post_screen.dart';
 import 'search_post_screen.dart';
 import 'history_post_screen.dart';
 import 'setting_screen.dart';
+import 'comment_screen.dart';
+import 'user_conf_screen.dart';
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
+// TODO: Need to implement follow import
+import 'comment/comment_model/user_model.dart';
+
 
 class TabInfo {
   IconData icon;
@@ -25,12 +30,14 @@ class NewsListScreen extends StatelessWidget {
     TabInfo(Icons.home, 'Home', PostScreen()),
     TabInfo(Icons.person_pin , 'My Page', HistoryPostScreen()),
     TabInfo(Icons.settings, 'Setting', SettingScreen()),
+    TabInfo(Icons.bolt, 'Com', CommentScreen(user: currentUser)),
+    TabInfo(Icons.supervised_user_circle, 'User', UserConfScreen()),
   ];
 
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 5,
+      length: 7,
       initialIndex: 2,
       child: Scaffold(
         appBar: AppBar(
