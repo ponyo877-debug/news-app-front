@@ -9,7 +9,7 @@ import 'user_conf_screen.dart';
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 // TODO: Need to implement follow import
 import 'comment/comment_model/user_model.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TabInfo {
   IconData icon;
@@ -36,6 +36,7 @@ class NewsListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    getNameData();
     return DefaultTabController(
       length: 7,
       initialIndex: 2,
@@ -85,5 +86,19 @@ class NewsListScreen extends StatelessWidget {
         // ),
       ),
     );
+  }
+
+  initNameData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString("Name", "まとめくん");
+  }
+
+  getNameData() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    var myStringData = await prefs.getString("Name");
+    print("Name: " + myStringData);
+    if (myStringData == null) {
+      initNameData();
+    }
   }
 }

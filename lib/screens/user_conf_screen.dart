@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class UserConfScreen extends StatefulWidget {
   const UserConfScreen({Key key}) : super(key: key);
@@ -8,6 +9,16 @@ class UserConfScreen extends StatefulWidget {
 }
 
 class _UserConfScreen extends State<UserConfScreen> {
+  bool _isEdit = false;
+  Future<String> _future;
+  String NameData = "";
+
+  @override
+  void initState() {
+    super.initState();
+    _future = _getNameData();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(children: [
@@ -21,7 +32,14 @@ class _UserConfScreen extends State<UserConfScreen> {
       ),
       Align(
           alignment: Alignment.topCenter,
-          child: Column(
+          child: FutureBuilder(
+            future: _future,
+    builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+    if (!snapshot.hasData) {
+      return Center(child: CircularProgressIndicator());
+    } else {
+      var _controller = TextEditingController(text: NameData.isEmpty ? snapshot.data : NameData);
+      return Column(
             children: [
               CircleAvatar(
               radius: 100.0,
@@ -45,10 +63,23 @@ class _UserConfScreen extends State<UserConfScreen> {
               ),
             ),
               Center(
-                child: Container(
+                child:
+                Container(
                   padding: EdgeInsets.only(top: 16.0),
-                  child: Text(
-                    'UserName',
+                  child: _isEdit ? TextField(
+                    controller: _controller,
+                    textAlign: TextAlign.center,
+                    autofocus: true,
+                    maxLength: 10,
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontFamily: 'SF Pro',
+                      fontWeight: FontWeight.w700,
+                      fontSize: 50.0,
+                    ),
+                  ) :
+                  Text(
+                    NameData.isEmpty ? snapshot.data : NameData,
                     style: TextStyle(
                       color: Colors.black,
                       fontFamily: 'SF Pro',
@@ -64,6 +95,15 @@ class _UserConfScreen extends State<UserConfScreen> {
                   child: TextButton(
                     onPressed: () {
                       print('押した');
+                      print(_isEdit);
+                      setState(() {
+                        if (_isEdit) {
+                          print("aaaa");
+                          NameData = _controller.text;
+                          updateNameData(NameData);
+                        }
+                        _isEdit = !_isEdit;
+                      });
                     },
                     child: Container(
                       padding:
@@ -74,7 +114,7 @@ class _UserConfScreen extends State<UserConfScreen> {
                         BorderRadius.all(Radius.circular(20.0)),
                       ),
                       child: Text(
-                        'Edit Name',
+                        _isEdit ? 'Update Name' : 'Edit Name',
                         style: TextStyle(
                           fontFamily: 'SF Pro',
                           color: Colors.white,
@@ -86,7 +126,23 @@ class _UserConfScreen extends State<UserConfScreen> {
                   ),
                 ),
               ),
-          ])),
+          ]);
+    }
+    },),
+    ),
     ]);
+  }
+
+  Future<String> _getNameData() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    var myStringData = await prefs.getString("Name");
+    print("Name: " + myStringData);
+    return myStringData;
+  }
+
+  updateNameData(String name) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString("Name", name);
+    print("UpdateName: " + name);
   }
 }
