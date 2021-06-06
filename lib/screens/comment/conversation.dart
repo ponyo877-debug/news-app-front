@@ -34,99 +34,106 @@ class _Conversation extends State<Conversation> {
 
   @override
   Widget build(BuildContext context) {
-
-    print('_deviceIdHash: $_deviceIdHash');
-    return ListView.builder(
-        reverse: false, // コメント順: 新規が下
-        itemCount: commentList.length,
-        itemBuilder: (context, int index) {
-          print('commentList[index] ${commentList[index]}');
-          final comment = commentList[index];
-          bool isMe = comment["deviceHash"] == _deviceIdHash;
-          return Container(
-            margin: EdgeInsets.only(top: 10),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment:
-                      isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    if (!isMe)
-                      CircleAvatar(
-                        radius: 15,
-                        backgroundImage: NetworkImage(
-                            comment["avatar"]),
-                      ),
-                    SizedBox(
-                      width: 10,
-                    ),
-                    Container(
-                        padding: EdgeInsets.all(10),
-                        constraints: BoxConstraints(
-                            maxWidth: MediaQuery.of(context).size.width * 0.75),
-                        decoration: BoxDecoration(
-                            color:
-                                isMe ? MyTheme.kAccentColor : Colors.grey[200],
-                            borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(15),
-                              topRight: Radius.circular(15),
-                              bottomLeft: Radius.circular(isMe ? 15 : 0),
-                              bottomRight: Radius.circular(isMe ? 0 : 15),
-                            )),
-                        child: Column(
-                          children: [
-                            if (!isMe)
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    comment["username"],
-                                    textAlign: TextAlign.right,
-                                    style: MyTheme.bodyTextMessage.copyWith(
-                                      color: Colors.lightBlue,
-                                    ),
-                                  ),
-                                  Text(comment["deviceHash"].substring(0, 6),
-                                      textAlign: TextAlign.right,
-                                      style: MyTheme.bodyTextMessage.copyWith(
-                                        color: Colors.grey[400],
-                                      )),
-                                ],
-                              ),
-                            Text(
-                              comment["massage"],
-                              textAlign: TextAlign.left,
-                              style: MyTheme.bodyTextMessage.copyWith(
-                                  color:
-                                      isMe ? Colors.white : Colors.grey[800]),
-                            )
-                          ],
-                        )),
-                  ],
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 5),
-                  child: Row(
+    var num_comment = commentList == null? 0: commentList.length;
+    if (num_comment == 0) {
+      return ListView(children: [SizedBox(height: 10),Center(child: Text("コメントはありません"))]);
+    } else {
+      print("%%%%%%%%%%");
+      return ListView.builder(
+          reverse: false, // コメント順: 新規が下
+          itemCount: num_comment,
+          itemBuilder: (context, int index) {
+            print('commentList[index] ${commentList[index]}');
+            final comment = commentList[index];
+            bool isMe = comment["deviceHash"] == _deviceIdHash;
+            return Container(
+              margin: EdgeInsets.only(top: 10),
+              child: Column(
+                children: [
+                  Row(
                     mainAxisAlignment:
-                        isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+                    isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       if (!isMe)
-                        SizedBox(
-                          width: 40,
+                        CircleAvatar(
+                          radius: 15,
+                          backgroundImage: NetworkImage(
+                              comment["avatar"]),
                         ),
-                      Text(
-                        comment["postDate"],
-                        style: MyTheme.bodyTextTime,
-                      )
+                      SizedBox(
+                        width: 10,
+                      ),
+                      Container(
+                          padding: EdgeInsets.all(10),
+                          constraints: BoxConstraints(
+                              maxWidth: MediaQuery
+                                  .of(context)
+                                  .size
+                                  .width * 0.75),
+                          decoration: BoxDecoration(
+                              color:
+                              isMe ? MyTheme.kAccentColor : Colors.grey[200],
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(15),
+                                topRight: Radius.circular(15),
+                                bottomLeft: Radius.circular(isMe ? 15 : 0),
+                                bottomRight: Radius.circular(isMe ? 0 : 15),
+                              )),
+                          child: Column(
+                            children: [
+                              if (!isMe)
+                                Row(
+                                  mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      comment["username"],
+                                      textAlign: TextAlign.right,
+                                      style: MyTheme.bodyTextMessage.copyWith(
+                                        color: Colors.lightBlue,
+                                      ),
+                                    ),
+                                    Text(comment["deviceHash"].substring(0, 6),
+                                        textAlign: TextAlign.right,
+                                        style: MyTheme.bodyTextMessage.copyWith(
+                                          color: Colors.grey[400],
+                                        )),
+                                  ],
+                                ),
+                              Text(
+                                comment["massage"],
+                                textAlign: TextAlign.left,
+                                style: MyTheme.bodyTextMessage.copyWith(
+                                    color:
+                                    isMe ? Colors.white : Colors.grey[800]),
+                              )
+                            ],
+                          )),
                     ],
                   ),
-                )
-              ],
-            ),
-          );
-        });
+                  Padding(
+                    padding: const EdgeInsets.only(top: 5),
+                    child: Row(
+                      mainAxisAlignment:
+                      isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+                      children: [
+                        if (!isMe)
+                          SizedBox(
+                            width: 40,
+                          ),
+                        Text(
+                          comment["postDate"],
+                          style: MyTheme.bodyTextTime,
+                        )
+                      ],
+                    ),
+                  )
+                ],
+              ),
+            );
+          });
+    }
   }
 
   Future getDiveceIdHash() async {
@@ -147,6 +154,7 @@ class _Conversation extends State<Conversation> {
       });
     }
   }
+
   Future getComments() async {
     var getCommentURL = baseURL + "/comment/get?articleID=" + widget.articleID;
     print('getCommentURL: $getCommentURL');

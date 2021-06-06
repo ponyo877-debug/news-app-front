@@ -1,9 +1,10 @@
 import 'dart:io';
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
 import 'news_card.dart';
 import 'news_list_screen.dart';
+import 'comment/conversation.dart';
+import 'comment/chat_composer.dart';
 
 // import 'package:charset_converter/charset_converter.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +12,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_user_agent/flutter_user_agent.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart';
+import 'package:device_info/device_info.dart';
+import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -45,11 +48,31 @@ class _MatomeWebView extends State<MatomeWebView> {
   bool isOpen = false;
   double dist_threshold = 0.1;
   bool _isExpanded = false;
+  String _deviceIdHash;
 
   final List<TabInfo> _tabs = [
     TabInfo(Icons.share, 'Share', null),
     TabInfo(Icons.report, 'Report article problem', null),
   ];
+
+  Future getDiveceIdHash() async {
+    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    var deviceId;
+    if (Platform.isAndroid) {
+      AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+      deviceId = androidInfo.androidId;
+    } else if (Platform.isIOS) {
+      IosDeviceInfo iosDeviceInfo = await deviceInfo.iosInfo;
+      deviceId = iosDeviceInfo.identifierForVendor;
+    }
+    var bytes = utf8.encode(deviceId); // data being hashed
+    var digest = sha1.convert(bytes).toString();
+    if (mounted) {
+      setState(() {
+        _deviceIdHash = digest;
+      });
+    }
+  }
 
   Future _getRecom(String postID) async {
     var getRecomURL = baseURL + "/recom/" + postID;
@@ -171,61 +194,77 @@ class _MatomeWebView extends State<MatomeWebView> {
 
   @override
   Widget build(BuildContext context) {
+    getDiveceIdHash();
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
         actions: <Widget>[
-          PopupMenuButton(
-            onSelected: (String s) async {
-              if (s == _tabs[0].title) {
-                await FlutterShare.share(
-                    title: widget.title,
-                    text: "title: " + widget.title,
-                    linkUrl: "URL: " + widget.selectedUrl,
-                );
-              } else if (s == _tabs[1].title) {
-                var linkTitle = Uri.encodeComponent(widget.title);
-                var link = Uri.encodeComponent(widget.selectedUrl);
-                var url = "https://docs.google.com/forms/d/e/1FAIpQLSdbHG9M2IVrL1YTXg6pL1pk1GaDeUhm3_105Epp1UCjWO525w/viewform?usp=pp_url&entry.126191999=title%EF%BC%9A"+linkTitle+"%0AURL%EF%BC%9A"+link;
-                  await Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => NormalWebView(
+          PopupMenuButton(onSelected: (String s) async {
+            if (s == _tabs[0].title) {
+              await FlutterShare.share(
+                title: widget.title,
+                text: "title: " + widget.title,
+                linkUrl: "URL: " + widget.selectedUrl,
+              );
+            } else if (s == _tabs[1].title) {
+              var linkTitle = Uri.encodeComponent(widget.title);
+              var link = Uri.encodeComponent(widget.selectedUrl);
+              var url =
+                  "https://docs.google.com/forms/d/e/1FAIpQLSdbHG9M2IVrL1YTXg6pL1pk1GaDeUhm3_105Epp1UCjWO525w/viewform?usp=pp_url&entry.126191999=title%EF%BC%9A" +
+                      linkTitle +
+                      "%0AURL%EF%BC%9A" +
+                      link;
+              await Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => NormalWebView(
                         title: s,
                         selectedUrl: url,
                       )));
-              }
-            },
-              itemBuilder: (BuildContext context) {
-                return _tabs.map((tab) {
-                  return PopupMenuItem(
-                    //child: tab.widget,
-                    child: Row (children: <Widget>[Icon(tab.icon),SizedBox(width: 10), Text(tab.title)]),
-                    // child: ListTile(
-                    //   leading: Icon(tab.icon),
-                    //     title:Text(tab.title),
-                    // ),
-                    value: tab.title,
-                  );
-                }).toList();
-              }
-          )
+            }
+          }, itemBuilder: (BuildContext context) {
+            return _tabs.map((tab) {
+              return PopupMenuItem(
+                //child: tab.widget,
+                child: Row(children: <Widget>[
+                  Icon(tab.icon),
+                  SizedBox(width: 10),
+                  Text(tab.title)
+                ]),
+                // child: ListTile(
+                //   leading: Icon(tab.icon),
+                //     title:Text(tab.title),
+                // ),
+                value: tab.title,
+              );
+            }).toList();
+          })
         ],
       ),
       body: FutureBuilder(
         future: _loadUri(widget.selectedUrl),
         builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+          var max_height = MediaQuery.of(context).size.height;
+          var fold_height = max_height * 0.4;
+          var expand_height = max_height * 0.85; // break if expand_height = max_height...
           if (snapshot.hasData) {
-            return Column (
-                mainAxisSize: MainAxisSize.max,
-                children: [Container(
-              height: _isExpanded ? MediaQuery.of(context).size.height / 3 * 2 :
-              MediaQuery.of(context).size.height / 3,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.blueGrey, width: 5),
-                      borderRadius: BorderRadius.all(Radius.circular(25)),
-          ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.all(Radius.circular(20)),
-                    child: GestureDetector(child: WebView(
+            return Column(/* mainAxisSize: MainAxisSize.max,*/ children: [
+            Container(
+            height: _isExpanded ? expand_height : fold_height,
+              child: Scaffold(
+              body :Container(
+                // height: _isExpanded
+                //     ? MediaQuery.of(context)
+                //         .size
+                //         .height /* / 3 * 2 */ : MediaQuery.of(context)
+                //             .size
+                //             .height ,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.blueGrey, width: 0),
+                  borderRadius: BorderRadius.all(Radius.circular(25)),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.all(Radius.circular(20)),
+                  child: GestureDetector(
+                    child: WebView(
                       // initialUrl: widget.selectedUrl,
                       javascriptMode: JavascriptMode.unrestricted,
                       onWebViewCreated: (WebViewController webViewController) {
@@ -236,35 +275,75 @@ class _MatomeWebView extends State<MatomeWebView> {
                         _getRecom(widget.postID);
                       },
                     ),
-                      onTapDown: (details) {
-            print("test");
-            setState(() {
-              print(_isExpanded);
-              _isExpanded = true;
-            });
-                      return false;
-          },
-                      behavior: HitTestBehavior.opaque,
-                    ),
-                  ),
-            ),
-                  ElevatedButton(
-                    onPressed: () {
+                    onTapDown: (details) {
                       setState(() {
-                        print(_isExpanded);
-                        _isExpanded = !_isExpanded;
+                        print('_isExpanded: $_isExpanded');
+                        _isExpanded = true;
                       });
+                      // return false;
                     },
-                    child: Text(
-                        _isExpanded ? 'コメントを開く' : '記事を開く'
-                    ),
+                    behavior: HitTestBehavior.opaque,
                   ),
-            Card(
-                //height: MediaQuery.of(context).size.height / 2 - AdMobService().getHeight(context).toInt(),
-              color: Colors.amberAccent,
-              child: Text("コメントが入る場所"),
-          )]
-            );
+                ),
+              ),
+                bottomNavigationBar: Platform.isAndroid
+                    ? AdmobBanner(
+                  adUnitId: AdMobService().getBannerAdUnitId(),
+                  adSize: AdmobBannerSize(
+                    width: MediaQuery.of(context).size.width.toInt(),
+                    height: AdMobService().getHeight(context).toInt(),
+                    name: 'BANNER',
+                  ),
+                )
+                    : null,
+                floatingActionButton: recomPost.isNotEmpty
+                    ? Builder(
+                  builder: (context) => _getRecomkButton(context),
+                )
+                    : null,
+              )
+              ,),
+              _isExpanded ? SizedBox() : Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    // コメントを打つためのTextFieldをコメント画面をタップすると縮小する
+                    // Old Ver: FocusScope.of(context).unfocus();
+                    final FocusScopeNode currentScope = FocusScope.of(context);
+                    if (!currentScope.hasPrimaryFocus &&
+                        currentScope.hasFocus) {
+                      FocusManager.instance.primaryFocus.unfocus();
+                    }
+                  },
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          padding: EdgeInsets.symmetric(horizontal: 20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(30),
+                              topRight: Radius.circular(30),
+                            ),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(30),
+                              topRight: Radius.circular(30),
+                            ),
+                            child: Conversation(
+                                articleID: widget.postID), // "60b79fc6c6b0062d9e484272"),
+                          ),
+                        ),
+                      ),
+                      buildChatComposer(
+                          articleID: widget.postID, // "60b79fc6c6b0062d9e484272",
+                          devideHash: _deviceIdHash), // "30224d5d5fcc0f5f5d04e5969179bcdbe6a9438f"),
+                    ],
+                  ),
+                ),
+              )
+            ]);
           } else {
             return new Center(
               child: new Container(
@@ -277,21 +356,21 @@ class _MatomeWebView extends State<MatomeWebView> {
           }
         },
       ),
-      bottomNavigationBar: Platform.isAndroid
-          ? AdmobBanner(
-              adUnitId: AdMobService().getBannerAdUnitId(),
-              adSize: AdmobBannerSize(
-                width: MediaQuery.of(context).size.width.toInt(),
-                height: AdMobService().getHeight(context).toInt(),
-                name: 'BANNER',
-              ),
-            )
-          : null,
-      floatingActionButton: recomPost.isNotEmpty
-          ? Builder(
-              builder: (context) => _getRecomkButton(context),
-            )
-          : null,
+      // bottomNavigationBar: Platform.isAndroid
+      //     ? AdmobBanner(
+      //         adUnitId: AdMobService().getBannerAdUnitId(),
+      //         adSize: AdmobBannerSize(
+      //           width: MediaQuery.of(context).size.width.toInt(),
+      //           height: AdMobService().getHeight(context).toInt(),
+      //           name: 'BANNER',
+      //         ),
+      //       )
+      //     : null,
+      // floatingActionButton: recomPost.isNotEmpty
+      //     ? Builder(
+      //         builder: (context) => _getRecomkButton(context),
+      //       )
+      //     : null,
     );
   }
 

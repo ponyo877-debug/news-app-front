@@ -69,6 +69,9 @@ class _buildChatComposer extends State<buildChatComposer> {
               map["massage"] = message;
               map["devicehash"] = widget.devideHash;
               print('putCommentURL: $putCommentURL');
+              print('map["articleID"]: ${map["articleID"]}');
+              print('map["massage"]: ${map["massage"]}');
+              print('map["devicehash"]: ${map["devicehash"]}');
               // TODO: Need to implement
               // curl -X POST -F articleID=60b79fc6c6b0062d9e484272 -F 'massage=super bunny man' -F devicehash=30224d5d5fcc0f5f5d04e5969179bcdbe6a9438f https://gitouhon-juku-k8s2.ga/comment/put
               // refer: https://stackoverflow.com/questions/57846215/how-make-a-http-post-using-form-data-in-flutter
