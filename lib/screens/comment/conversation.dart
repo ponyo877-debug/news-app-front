@@ -1,6 +1,7 @@
 import 'comment_model/message_model.dart';
 import 'comment_model/user_model.dart';
 import 'chat_theme.dart';
+import 'get_device_hash.dart';
 import 'package:flutter/material.dart';
 import 'package:device_info/device_info.dart';
 import 'dart:io';
@@ -28,7 +29,7 @@ class _Conversation extends State<Conversation> {
   void initState() {
     super.initState();
     print("initState");
-    getDiveceIdHash();
+    setDiveceIdHash();
     getComments();
   }
 
@@ -136,18 +137,8 @@ class _Conversation extends State<Conversation> {
     }
   }
 
-  Future getDiveceIdHash() async {
-    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-    var deviceId;
-    if (Platform.isAndroid) {
-      AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-      deviceId = androidInfo.androidId;
-    } else if (Platform.isIOS) {
-      IosDeviceInfo iosDeviceInfo = await deviceInfo.iosInfo;
-      deviceId = iosDeviceInfo.identifierForVendor;
-    }
-    var bytes = utf8.encode(deviceId); // data being hashed
-    var digest = sha1.convert(bytes).toString();
+  Future setDiveceIdHash() async {
+    var digest = await getDeviceIdHash();
     if (mounted) {
       setState(() {
         _deviceIdHash = digest;

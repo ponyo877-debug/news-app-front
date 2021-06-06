@@ -302,6 +302,9 @@ class NewsState extends StateNotifier<List> {
       var getPostURL = baseURL + "/personal?ids=" + ids;
       print(getPostURL);
       http.Response response = await http.get(getPostURL);
+      if(response.statusCode != 200){
+        return;
+      }
       data = json.decode(
           Utf8Decoder(allowMalformed: true).convert(response.bodyBytes));
 

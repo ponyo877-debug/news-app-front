@@ -5,11 +5,12 @@ import 'comment/chat_theme.dart';
 import 'comment/comment_model/user_model.dart';
 
 class CommentScreen extends StatefulWidget {
-  const CommentScreen({Key key, @required this.user}) : super(key: key);
+  const CommentScreen({Key key, @required this.articleID, @required this.devideHash}) : super(key: key);
 
   @override
   _CommentScreen createState() => _CommentScreen();
-  final User user;
+  final String articleID;
+  final String devideHash;
 }
 
 // https://github.com/cybdom/messengerish
@@ -18,27 +19,7 @@ class CommentScreen extends StatefulWidget {
 class _CommentScreen extends State<CommentScreen> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Column(
-        children: [
-          Expanded(
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    "記事のタイトル or",
-                    style: MyTheme.chatSenderName,
-                  ),
-                  Text(
-                    '記事自身の縮小版',
-                    style: MyTheme.chatSenderName,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Expanded(
+    return Expanded(
             child: GestureDetector(
               onTap: () {
                 // コメントを打つためのTextFieldをコメント画面をタップすると縮小する
@@ -49,6 +30,7 @@ class _CommentScreen extends State<CommentScreen> {
                 }
               },
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Expanded(
                     child: Container(
@@ -67,22 +49,18 @@ class _CommentScreen extends State<CommentScreen> {
                           topRight: Radius.circular(30),
                         ),
                         // コメントの一覧
-                        // child: Conversation(user: widget.user),
                         child:
-                            Conversation(articleID: "60b79fc6c6b0062d9e484272"),
+                            Conversation(articleID: widget.articleID),
                       ),
                     ),
                   ),
                   // コメント記入フォーム
                   buildChatComposer(
-                      articleID: "60b79fc6c6b0062d9e484272",
-                      devideHash: "30224d5d5fcc0f5f5d04e5969179bcdbe6a9438f"),
+                      articleID: widget.articleID,
+                      devideHash: widget.devideHash),
                 ],
               ),
             ),
-          )
-        ],
-      ),
-    );
+          );
   }
 }

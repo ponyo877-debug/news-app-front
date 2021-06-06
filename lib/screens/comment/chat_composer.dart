@@ -26,18 +26,20 @@ class _buildChatComposer extends State<buildChatComposer> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 20),
       color: Colors.white,
-      height: 100,
+      height: 60,
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Expanded(
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 14),
-              height: 60,
+              height: 40,
               decoration: BoxDecoration(
                 color: Colors.grey[200],
-                borderRadius: BorderRadius.circular(30),
+                borderRadius: BorderRadius.circular(15),
               ),
               child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   SizedBox(
                     width: 10,
@@ -47,7 +49,7 @@ class _buildChatComposer extends State<buildChatComposer> {
                       controller: _controller,
                       decoration: InputDecoration(
                         border: InputBorder.none,
-                        hintText: '記事への思いを書いて頂ければ...',
+                        hintText: '記事へコメント',
                         hintStyle: TextStyle(color: Colors.grey[500]),
                       ),
                     ),
@@ -60,24 +62,6 @@ class _buildChatComposer extends State<buildChatComposer> {
             width: 16,
           ),
           GestureDetector(
-            onTap: () async {
-              var message = _controller.text;
-              print('message: $message');
-              var putCommentURL = baseURL + "/comment/put";
-              var map = new Map<String, dynamic>();
-              map["articleID"] = widget.articleID;
-              map["massage"] = message;
-              map["devicehash"] = widget.devideHash;
-              print('putCommentURL: $putCommentURL');
-              print('map["articleID"]: ${map["articleID"]}');
-              print('map["massage"]: ${map["massage"]}');
-              print('map["devicehash"]: ${map["devicehash"]}');
-              // TODO: Need to implement
-              // curl -X POST -F articleID=60b79fc6c6b0062d9e484272 -F 'massage=super bunny man' -F devicehash=30224d5d5fcc0f5f5d04e5969179bcdbe6a9438f https://gitouhon-juku-k8s2.ga/comment/put
-              // refer: https://stackoverflow.com/questions/57846215/how-make-a-http-post-using-form-data-in-flutter
-              http.Response _ = await http.post(putCommentURL, body: map);
-              _controller.clear();
-            },
             child: CircleAvatar(
               backgroundColor: MyTheme.kAccentColor,
               child: Icon(
@@ -85,6 +69,16 @@ class _buildChatComposer extends State<buildChatComposer> {
                 color: Colors.white,
               ),
             ),
+            onTap: () async {
+              var message = _controller.text;
+              var putCommentURL = baseURL + "/comment/put";
+              var map = new Map<String, dynamic>();
+              map["articleID"] = widget.articleID;
+              map["massage"] = message;
+              map["devicehash"] = widget.devideHash;
+              http.Response _ = await http.post(putCommentURL, body: map);
+              _controller.clear();
+            },
           )
         ],
       ),
