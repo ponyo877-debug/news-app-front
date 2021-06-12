@@ -36,7 +36,7 @@ class NewsListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    getNameData();
+    // getNameData();
     return DefaultTabController(
       length: 7,
       initialIndex: 2,

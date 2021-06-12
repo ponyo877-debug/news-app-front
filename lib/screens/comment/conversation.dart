@@ -13,15 +13,16 @@ import 'package:http/http.dart' as http;
 // https://konifar.hatenablog.com/entry/2018/02/11/081031
 // https://zenn.dev/hayabusabusa/articles/7bf73f007584aa4e0ee8
 class Conversation extends StatefulWidget {
-  const Conversation({Key key, this.articleID}) : super(key: key);
+  const Conversation({Key key, @required this.articleID, @required this.deviceHash}) : super(key: key);
 
   @override
   _Conversation createState() => _Conversation();
   final String articleID;
+  final String deviceHash;
 }
 
 class _Conversation extends State<Conversation> {
-  String _deviceIdHash;
+  // String _deviceIdHash;
   List commentList = [];
   String baseURL = "http://gitouhon-juku-k8s2.ga";
 
@@ -29,7 +30,6 @@ class _Conversation extends State<Conversation> {
   void initState() {
     super.initState();
     print("initState");
-    setDiveceIdHash();
     getComments();
   }
 
@@ -46,7 +46,7 @@ class _Conversation extends State<Conversation> {
           itemBuilder: (context, int index) {
             print('commentList[index] ${commentList[index]}');
             final comment = commentList[index];
-            bool isMe = comment["deviceHash"] == _deviceIdHash;
+            bool isMe = comment["deviceHash"] == widget.deviceHash;
             return Container(
               margin: EdgeInsets.only(top: 10),
               child: Column(
@@ -137,14 +137,7 @@ class _Conversation extends State<Conversation> {
     }
   }
 
-  Future setDiveceIdHash() async {
-    var digest = await getDeviceIdHash();
-    if (mounted) {
-      setState(() {
-        _deviceIdHash = digest;
-      });
-    }
-  }
+
 
   Future getComments() async {
     var getCommentURL = baseURL + "/comment/get?articleID=" + widget.articleID;

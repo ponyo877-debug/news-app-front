@@ -13,6 +13,7 @@ import 'package:admob_flutter/admob_flutter.dart';
 import 'package:flutter_share/flutter_share.dart';
 import 'webview_tools.dart';
 import 'comment_screen.dart';
+import 'comment/get_device_hash.dart';
 
 // WebViewController _controller;
 class MatomeWebView extends StatefulWidget {
@@ -41,11 +42,19 @@ class _MatomeWebView extends State<MatomeWebView> {
   bool isOpen = false;
   double dist_threshold = 0.1;
   bool _isExpanded = false;
+  String _deviceIdHash;
 
   final List<TabInfo> _tabs = [
     TabInfo(Icons.share, 'Share', null),
     TabInfo(Icons.report, 'Report article problem', null),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    print("initState");
+    setDiveceIdHash();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -165,7 +174,7 @@ class _MatomeWebView extends State<MatomeWebView> {
                   behavior: HitTestBehavior.opaque,
                 ),
               ),
-              CommentScreen(),
+              CommentScreen(articleID: widget.postID, deviceHash: _deviceIdHash),
             ]);
           } else {
             return new Center(
@@ -244,6 +253,15 @@ class _MatomeWebView extends State<MatomeWebView> {
     );
   }
 
+  Future setDiveceIdHash() async {
+    var digest = await getDeviceIdHash();
+    if (mounted) {
+      setState(() {
+        _deviceIdHash = digest;
+      });
+    }
+  }
+
   Future _getRecom(String postID) async {
     var getRecomURL = baseURL + "/recom/" + postID;
     print('getRecomURL: $getRecomURL');
@@ -253,10 +271,12 @@ class _MatomeWebView extends State<MatomeWebView> {
     if (mounted) {
       setState(() {
         var postTmps = data["data"];
-        for (var postTmp in postTmps) {
-          if (postTmp != null) {
-            if (postTmp["distance"] > dist_threshold) {
-              recomPost.add(postTmp);
+        if (postTmps != null) {
+          for (var postTmp in postTmps) {
+            if (postTmp != null) {
+              if (postTmp["distance"] > dist_threshold) {
+                recomPost.add(postTmp);
+              }
             }
           }
         }
