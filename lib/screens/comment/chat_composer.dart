@@ -76,7 +76,11 @@ class _buildChatComposer extends State<buildChatComposer> {
               map["articleID"] = widget.articleID;
               map["massage"] = message;
               map["devicehash"] = widget.deviceHash;
-              http.Response _ = await http.post(putCommentURL, body: map);
+              print('putCommentURL: $putCommentURL');
+              http.Response res = await http.post(putCommentURL, body: map);
+              print('deviceHash: ${widget.deviceHash}');
+              print('http.Response: ${res.statusCode}');
+
               _controller.clear();
             },
           )

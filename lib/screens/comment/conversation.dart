@@ -1,5 +1,3 @@
-import 'comment_model/message_model.dart';
-import 'comment_model/user_model.dart';
 import 'chat_theme.dart';
 import 'get_device_hash.dart';
 import 'package:flutter/material.dart';
@@ -9,11 +7,12 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
 
-
 // https://konifar.hatenablog.com/entry/2018/02/11/081031
 // https://zenn.dev/hayabusabusa/articles/7bf73f007584aa4e0ee8
 class Conversation extends StatefulWidget {
-  const Conversation({Key key, @required this.articleID, @required this.deviceHash}) : super(key: key);
+  const Conversation(
+      {Key key, @required this.articleID, @required this.deviceHash})
+      : super(key: key);
 
   @override
   _Conversation createState() => _Conversation();
@@ -35,9 +34,10 @@ class _Conversation extends State<Conversation> {
 
   @override
   Widget build(BuildContext context) {
-    var num_comment = commentList == null? 0: commentList.length;
+    var num_comment = commentList == null ? 0 : commentList.length;
     if (num_comment == 0) {
-      return ListView(children: [SizedBox(height: 10),Center(child: Text("コメントはありません"))]);
+      return ListView(
+          children: [SizedBox(height: 10), Center(child: Text("コメントはありません"))]);
     } else {
       print("%%%%%%%%%%");
       return ListView.builder(
@@ -53,14 +53,13 @@ class _Conversation extends State<Conversation> {
                 children: [
                   Row(
                     mainAxisAlignment:
-                    isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+                        isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       if (!isMe)
                         CircleAvatar(
                           radius: 15,
-                          backgroundImage: NetworkImage(
-                              comment["avatar"]),
+                          backgroundImage: NetworkImage(comment["avatar"]),
                         ),
                       SizedBox(
                         width: 10,
@@ -68,13 +67,12 @@ class _Conversation extends State<Conversation> {
                       Container(
                           padding: EdgeInsets.all(10),
                           constraints: BoxConstraints(
-                              maxWidth: MediaQuery
-                                  .of(context)
-                                  .size
-                                  .width * 0.75),
+                              maxWidth:
+                                  MediaQuery.of(context).size.width * 0.75),
                           decoration: BoxDecoration(
-                              color:
-                              isMe ? MyTheme.kAccentColor : Colors.grey[200],
+                              color: isMe
+                                  ? MyTheme.kAccentColor
+                                  : Colors.grey[200],
                               borderRadius: BorderRadius.only(
                                 topLeft: Radius.circular(15),
                                 topRight: Radius.circular(15),
@@ -86,7 +84,7 @@ class _Conversation extends State<Conversation> {
                               if (!isMe)
                                 Row(
                                   mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
                                       comment["username"],
@@ -107,7 +105,7 @@ class _Conversation extends State<Conversation> {
                                 textAlign: TextAlign.left,
                                 style: MyTheme.bodyTextMessage.copyWith(
                                     color:
-                                    isMe ? Colors.white : Colors.grey[800]),
+                                        isMe ? Colors.white : Colors.grey[800]),
                               )
                             ],
                           )),
@@ -116,8 +114,9 @@ class _Conversation extends State<Conversation> {
                   Padding(
                     padding: const EdgeInsets.only(top: 5),
                     child: Row(
-                      mainAxisAlignment:
-                      isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+                      mainAxisAlignment: isMe
+                          ? MainAxisAlignment.end
+                          : MainAxisAlignment.start,
                       children: [
                         if (!isMe)
                           SizedBox(
@@ -126,7 +125,60 @@ class _Conversation extends State<Conversation> {
                         Text(
                           comment["postDate"],
                           style: MyTheme.bodyTextTime,
-                        )
+                        ),
+                        if (!isMe)
+                          SizedBox(
+                            width: 20,
+                          ),
+                        if (!isMe)
+                          GestureDetector(
+                            child: Icon(Icons.announcement_rounded,
+                                color: Color(0xffAEABC9)),
+                            onTap: () {
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) =>
+                                    new AlertDialog(
+                                  title: Text("通報理由を入力してください"),
+                                  content: Container(
+                                      child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                        Text('user: ' + comment["username"]),
+                                        Text('message: ' + comment["massage"]),
+                                            ReportDropdown(dropdownList: <String>[
+                                          '通報理由を選択',
+                                          '性的な内容',
+                                          '出会い目的',
+                                          '荒らし',
+                                          '他アプリへの移動',
+                                          '勧誘・営業',
+                                          '犯罪行為',
+                                          'その他'
+                                        ]),
+                                        Text("通報内容はアプリ管理者に報告されます"),
+                                      ])),
+                                  // ボタンの配置
+                                  actions: <Widget>[
+                                    new TextButton(
+                                        child: const Text('キャンセル'),
+                                        onPressed: () {
+                                          print('Cancel!');
+                                          Navigator.pop(context);
+
+                                        }),
+                                    new TextButton(
+                                        child: const Text('OK'),
+                                        onPressed: () {
+                                          print('Ok!');
+                                          execWebHook(comment["massage"]);
+                                          Navigator.pop(context);
+                                        })
+                                  ],
+                                ),
+                              );
+                            },
+                          )
                       ],
                     ),
                   )
@@ -137,6 +189,14 @@ class _Conversation extends State<Conversation> {
     }
   }
 
+
+  Future execWebHook(String message) async {
+    var slackWebhookURL = "https://hooks.slack.com/services/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";
+    String body = json.encode(
+        {'text': '\'' + message + '\'が通報されました'});
+    print('slackWebhookURL: $slackWebhookURL');
+    http.Response res = await http.post(slackWebhookURL, body: body);
+  }
 
 
   Future getComments() async {
@@ -149,5 +209,40 @@ class _Conversation extends State<Conversation> {
         commentList = data["data"];
       });
     }
+  }
+}
+
+class ReportDropdown extends StatefulWidget {
+  const ReportDropdown({Key key, @required this.dropdownList,}) : super(key: key);
+
+  @override
+  State<ReportDropdown> createState() => _ReportDropdown();
+  final List<String> dropdownList;
+}
+
+/// This is the private State class that goes with MyStatefulWidget.
+class _ReportDropdown extends State<ReportDropdown> {
+  String dropdownValue = '通報理由を選択';
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButton<String>(
+      value: dropdownValue,
+      icon: const Icon(Icons.arrow_drop_down),
+      iconSize: 24,
+      elevation: 16,
+      onChanged: (String newValue) {
+        setState(() {
+          dropdownValue = newValue;
+        });
+      },
+      items: widget.dropdownList
+          .map<DropdownMenuItem<String>>((String value) {
+        return DropdownMenuItem<String>(
+          value: value,
+          child: Text(value, style: TextStyle(color: value == "通報理由を選択"? Colors.grey: Colors.white),),
+        );
+      }).toList(),
+    );
   }
 }

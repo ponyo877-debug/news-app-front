@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'comment/conversation.dart';
 import 'comment/chat_composer.dart';
 import 'comment/chat_theme.dart';
-import 'comment/comment_model/user_model.dart';
-
 class CommentScreen extends StatefulWidget {
   const CommentScreen({Key key, @required this.articleID, @required this.deviceHash}) : super(key: key);
 
