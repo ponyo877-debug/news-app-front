@@ -48,7 +48,7 @@ class NewsListScreen extends StatelessWidget {
     getNameData();
     checkDeviceIdHash(context);
     return DefaultTabController(
-      length: 6,
+      length: 5,
       initialIndex: 2,
       child: Scaffold(
         appBar: AppBar(
