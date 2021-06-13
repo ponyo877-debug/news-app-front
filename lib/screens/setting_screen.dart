@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'webview.dart';
 import 'select_sites.dart';
+import 'user_conf_screen.dart';
 
 class SettingInfo {
   IconData icon;
@@ -64,7 +65,20 @@ class SettingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: ListView.separated(
+      body: Column (
+      children: [
+        UserConfScreen(),
+        SizedBox(height: 30),
+        Expanded(
+        child: Container(
+          //height: 250,
+        decoration: BoxDecoration(
+          color: Colors.white10,
+          borderRadius: BorderRadius.circular(16.0),
+        ),
+      child: ListView.separated(
+        shrinkWrap: true,
+        //physics: NeverScrollableScrollPhysics(),
         itemCount: _settingTabs.length,
         separatorBuilder: (BuildContext context, int index) =>
             Divider(color: Colors.white),
@@ -85,6 +99,8 @@ class SettingScreen extends StatelessWidget {
                   },
           );
         },
+      ),
+      ),)],
       ),
     );
   }
