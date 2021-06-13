@@ -47,6 +47,7 @@ dependencies:
   device_info: ^2.0.2
   crypto: ^3.0.1
   shared_preferences: ^0.5.12+4
+  awesome_dialog: ^2.1.0
 
 flutter_icons:
   android: true
@@ -76,6 +77,7 @@ flutter:
   assets:
     - assets/images/megane_wellington_woman.png
     - assets/images/no_image_square.jpg
+    - assets/images/icon/
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
