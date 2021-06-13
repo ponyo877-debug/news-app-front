@@ -117,7 +117,7 @@ class NewsListScreen extends StatelessWidget {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     var myStringData = await prefs.getString("devicehash");
     print("devicehash: ");
-    print(myStringData);
+    // print(myStringData);
 
     if (myStringData == null) {
       DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();

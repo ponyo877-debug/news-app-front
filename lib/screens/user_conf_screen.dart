@@ -65,7 +65,7 @@ class _UserConfScreen extends State<UserConfScreen> {
                     var result = await Navigator.of(context).push(
                         MaterialPageRoute(
                             builder: (context) => SelectMyimageScreen(IconData.isEmpty ? snapshot.data['Icon'] : IconData)));
-                    print(result);
+                    // print(result);
                     if (result != null) {
                       setState(() {
                         IconData = result;

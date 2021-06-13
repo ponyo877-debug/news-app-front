@@ -207,7 +207,7 @@ class NewsState extends StateNotifier<List> {
 
   void addHistory(HistoryModel history, String type) async {
     //print("add history");
-    print(state);
+    // print(state);
 
     // add hive data
     final addBox = await Hive.openBox<HistoryModel>(type);

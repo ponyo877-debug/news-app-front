@@ -60,7 +60,7 @@ class _MatomeWebView extends State<MatomeWebView> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true,
-        appBar: AppBar(
+      appBar: AppBar(
         title: Text(widget.title),
         actions: <Widget>[
           PopupMenuButton(onSelected: (String s) async {
@@ -107,14 +107,13 @@ class _MatomeWebView extends State<MatomeWebView> {
             var appBarHeight = Scaffold.of(context).appBarMaxHeight;
             var bottomBarHeight = AdMobService().getHeight(context).toInt();
             var commentFieldHeight = 0;
-            var bodyHeight = screenHeight - (appBarHeight + bottomBarHeight + commentFieldHeight);
+            var bodyHeight = screenHeight -
+                (appBarHeight + bottomBarHeight + commentFieldHeight);
             var expandHeight = bodyHeight;
             var contractHeight = bodyHeight * 0.5;
             return Column(mainAxisSize: MainAxisSize.min, children: [
               Container(
-                height: _isExpanded
-                    ? expandHeight
-                    : contractHeight,
+                height: _isExpanded ? expandHeight : contractHeight,
                 decoration: BoxDecoration(
                   // border: Border.all(color: Colors.blueGrey, width: 5),
                   borderRadius: BorderRadius.all(Radius.circular(25)),
@@ -131,36 +130,39 @@ class _MatomeWebView extends State<MatomeWebView> {
                               (WebViewController webViewController) {
                             // controller.complete(webViewController);
                             _controller = webViewController;
-                            print(snapshot.data);
+                            // print(snapshot.data);
                             _controller.loadUrl(snapshot.data);
                             _getRecom(widget.postID);
                           },
                         ),
                       ),
-
                       floatingActionButton: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         // mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                        Expanded( child: SizedBox()),
+                          Expanded(child: SizedBox()),
                           Spacer(),
-                    ElevatedButton(
+                          ElevatedButton(
                             onPressed: () {
                               setState(() {
                                 print(_isExpanded);
                                 _isExpanded = !_isExpanded;
                               });
                             },
-                            child: Text(_isExpanded ? 'コメントを開く' : '記事を開く', maxLines: 1,),
-                  ),
+                            child: Text(
+                              _isExpanded ? 'コメントを開く' : '記事を開く',
+                              maxLines: 1,
+                            ),
+                          ),
                           Spacer(),
-                      Expanded(
-                        child: recomPost.isNotEmpty
-                          ? Builder(
-                        builder: (context) =>
-                            _getRecomButton(context),
-                      )
-                          : SizedBox(),)
+                          Expanded(
+                            child: recomPost.isNotEmpty
+                                ? Builder(
+                                    builder: (context) =>
+                                        _getRecomButton(context),
+                                  )
+                                : SizedBox(),
+                          )
                         ],
                       )),
                   onTapDown: (details) {
@@ -174,7 +176,10 @@ class _MatomeWebView extends State<MatomeWebView> {
                   behavior: HitTestBehavior.opaque,
                 ),
               ),
-              CommentScreen(articleID: widget.postID, deviceHash: _deviceIdHash),
+              _isExpanded
+                  ? SizedBox()
+                  : CommentScreen(
+                      articleID: widget.postID, deviceHash: _deviceIdHash),
             ]);
           } else {
             return new Center(
@@ -190,15 +195,13 @@ class _MatomeWebView extends State<MatomeWebView> {
       ),
       bottomNavigationBar: Platform.isAndroid
           ? AdmobBanner(
-        adUnitId: AdMobService().getBannerAdUnitId(),
-        adSize: AdmobBannerSize(
-          width:
-          MediaQuery.of(context).size.width.toInt(),
-          height:
-          AdMobService().getHeight(context).toInt(),
-          name: 'BANNER',
-        ),
-      )
+              adUnitId: AdMobService().getBannerAdUnitId(),
+              adSize: AdmobBannerSize(
+                width: MediaQuery.of(context).size.width.toInt(),
+                height: AdMobService().getHeight(context).toInt(),
+                name: 'BANNER',
+              ),
+            )
           : null,
     );
   }
@@ -218,7 +221,7 @@ class _MatomeWebView extends State<MatomeWebView> {
           Scaffold.of(context).showBottomSheet<void>(
             (BuildContext context) {
               return Container(
-                  height: 100, //MediaQuery.of(context).size.height * 0.1,
+                  height: 120, //MediaQuery.of(context).size.height * 0.1,
                   child: ListView.builder(
                     shrinkWrap: true,
                     // padding: EdgeInsets.all(20),
