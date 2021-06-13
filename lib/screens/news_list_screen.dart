@@ -8,7 +8,6 @@ import 'comment_screen.dart';
 import 'user_conf_screen.dart';
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 // TODO: Need to implement follow import
-import 'comment/comment_model/user_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:device_info/device_info.dart';
 import 'dart:io';
