@@ -59,7 +59,10 @@ class _Conversation extends State<Conversation> {
                       if (!isMe)
                         CircleAvatar(
                           radius: 15,
-                          backgroundImage: NetworkImage(comment["avatar"]),
+                          backgroundColor: Colors.white,
+                          backgroundImage: comment["avatar"].startsWith('http')
+                              ? NetworkImage(comment["avatar"])
+                              : AssetImage(comment["avatar"]),
                         ),
                       SizedBox(
                         width: 10,
@@ -85,17 +88,20 @@ class _Conversation extends State<Conversation> {
                                 Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
+                                  mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Text(
                                       comment["username"],
                                       textAlign: TextAlign.right,
-                                      style: MyTheme.bodyTextMessage.copyWith(
+                                      style: MyTheme.headerTextMessage.copyWith(
                                         color: Colors.lightBlue,
                                       ),
                                     ),
+                                    SizedBox(width: 10),
                                     Text(comment["deviceHash"].substring(0, 6),
                                         textAlign: TextAlign.right,
-                                        style: MyTheme.bodyTextMessage.copyWith(
+                                        style:
+                                            MyTheme.headerTextMessage.copyWith(
                                           color: Colors.grey[400],
                                         )),
                                   ],
@@ -128,7 +134,7 @@ class _Conversation extends State<Conversation> {
                         ),
                         if (!isMe)
                           SizedBox(
-                            width: 20,
+                            width: 5,
                           ),
                         if (!isMe)
                           GestureDetector(
@@ -146,7 +152,7 @@ class _Conversation extends State<Conversation> {
                                           children: [
                                         Text('user: ' + comment["username"]),
                                         Text('message: ' + comment["massage"]),
-                                            ReportDropdown(dropdownList: <String>[
+                                        ReportDropdown(dropdownList: <String>[
                                           '通報理由を選択',
                                           '性的な内容',
                                           '出会い目的',
@@ -165,13 +171,13 @@ class _Conversation extends State<Conversation> {
                                         onPressed: () {
                                           print('Cancel!');
                                           Navigator.pop(context);
-
                                         }),
                                     new TextButton(
-                                        child: const Text('OK'),
+                                        child: const Text('通報'),
                                         onPressed: () {
                                           print('Ok!');
-                                          execWebHook(comment["massage"]);
+                                          execWebHook(comment["massage"],
+                                              comment["commentID"]);
                                           Navigator.pop(context);
                                         })
                                   ],
@@ -189,15 +195,18 @@ class _Conversation extends State<Conversation> {
     }
   }
 
-
-  Future execWebHook(String message) async {
-    var slackWebhookURL = "https://hooks.slack.com/services/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";
-    String body = json.encode(
-        {'text': '\'' + message + '\'が通報されました'});
-    print('slackWebhookURL: $slackWebhookURL');
+  Future execWebHook(String message, String commentID) async {
+    var slackWebhookURL =
+        'https://hooks.slack.com/services/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';
+    var reportText = '*以下のコメントが通報されました*\n- articleID: ' +
+        widget.articleID +
+        '\n- CommentID: ' +
+        commentID +
+        '\n- 本文: ' +
+        message + '\n削除コマンド: `db.article_col.update({_id: ObjectId("' + widget.articleID + '")}, {\$pull: {\'comments\': {commentID: \'' + commentID + '\'}}})`';
+    String body = json.encode({'text': reportText});
     http.Response res = await http.post(slackWebhookURL, body: body);
   }
-
 
   Future getComments() async {
     var getCommentURL = baseURL + "/comment/get?articleID=" + widget.articleID;
@@ -213,7 +222,10 @@ class _Conversation extends State<Conversation> {
 }
 
 class ReportDropdown extends StatefulWidget {
-  const ReportDropdown({Key key, @required this.dropdownList,}) : super(key: key);
+  const ReportDropdown({
+    Key key,
+    @required this.dropdownList,
+  }) : super(key: key);
 
   @override
   State<ReportDropdown> createState() => _ReportDropdown();
@@ -236,11 +248,14 @@ class _ReportDropdown extends State<ReportDropdown> {
           dropdownValue = newValue;
         });
       },
-      items: widget.dropdownList
-          .map<DropdownMenuItem<String>>((String value) {
+      items: widget.dropdownList.map<DropdownMenuItem<String>>((String value) {
         return DropdownMenuItem<String>(
           value: value,
-          child: Text(value, style: TextStyle(color: value == "通報理由を選択"? Colors.grey: Colors.white),),
+          child: Text(
+            value,
+            style: TextStyle(
+                color: value == "通報理由を選択" ? Colors.grey : Colors.white),
+          ),
         );
       }).toList(),
     );

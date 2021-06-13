@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'chat_theme.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter/services.dart';
+import 'dart:convert';
 
 class buildChatComposer extends StatefulWidget {
   const buildChatComposer(
@@ -46,10 +48,17 @@ class _buildChatComposer extends State<buildChatComposer> {
                   ),
                   Expanded(
                     child: TextField(
+                      keyboardType: TextInputType.multiline,
+                      maxLines: null,
+                      // maxLength: 10,
+                      inputFormatters: [
+                        LengthLimitingTextInputFormatter(50),
+                      ],
+                      style: TextStyle(color: Colors.black),
                       controller: _controller,
                       decoration: InputDecoration(
                         border: InputBorder.none,
-                        hintText: '記事へコメント',
+                        hintText: 'コメントを書く ✍',
                         hintStyle: TextStyle(color: Colors.grey[500]),
                       ),
                     ),
@@ -77,11 +86,21 @@ class _buildChatComposer extends State<buildChatComposer> {
               map["massage"] = message;
               map["devicehash"] = widget.deviceHash;
               print('putCommentURL: $putCommentURL');
-              http.Response res = await http.post(putCommentURL, body: map);
-              print('deviceHash: ${widget.deviceHash}');
-              print('http.Response: ${res.statusCode}');
+              http.Response response = await http.post(putCommentURL, body: map);
+              var res = json.decode(response.body);
+              print('res["Status"]: ${res["Status"]}');
+              if(res["Status"] != "Ok"){
+                final snackBar = SnackBar(
+                  content: Text('コメントに不適切な表現が含まれていたようです\n修正してください'),
+                  duration: Duration(seconds: 2),
+                );
 
-              _controller.clear();
+                ScaffoldMessenger.of(context).showSnackBar(snackBar);
+              } else {
+                print('deviceHash: ${widget.deviceHash}');
+                print('response.statusCode: ${response.statusCode}');
+                _controller.clear();
+              }
             },
           )
         ],
