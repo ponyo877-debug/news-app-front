@@ -5,12 +5,12 @@ import 'comment/chat_theme.dart';
 import 'comment/comment_model/user_model.dart';
 
 class CommentScreen extends StatefulWidget {
-  const CommentScreen({Key key, @required this.articleID, @required this.devideHash}) : super(key: key);
+  const CommentScreen({Key key, @required this.articleID, @required this.deviceHash}) : super(key: key);
 
   @override
   _CommentScreen createState() => _CommentScreen();
   final String articleID;
-  final String devideHash;
+  final String deviceHash;
 }
 
 // https://github.com/cybdom/messengerish
@@ -50,14 +50,15 @@ class _CommentScreen extends State<CommentScreen> {
                         ),
                         // コメントの一覧
                         child:
-                            Conversation(articleID: widget.articleID),
+                            Conversation(articleID: widget.articleID,
+                                deviceHash: widget.deviceHash),
                       ),
                     ),
                   ),
                   // コメント記入フォーム
                   buildChatComposer(
                       articleID: widget.articleID,
-                      devideHash: widget.devideHash),
+                      deviceHash: widget.deviceHash),
                 ],
               ),
             ),

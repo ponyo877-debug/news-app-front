@@ -10,12 +10,6 @@ import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 // TODO: Need to implement follow import
 import 'comment/comment_model/user_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:device_info/device_info.dart';
-import 'dart:io';
-import 'dart:convert';
-import 'package:crypto/crypto.dart';
-import 'package:http/http.dart' as http;
-import 'package:awesome_dialog/awesome_dialog.dart';
 
 class TabInfo {
   IconData icon;
@@ -30,26 +24,21 @@ class NewsListScreen extends StatelessWidget {
 
   //final Map<String, dynamic> data;
 
-  String initName = 'まとめくん';
-  String initIcon = 'assets/images/icon/myimage_1.png';
-  String baseURL = "https://gitouhon-juku-k8s2.ga";
-
   final List<TabInfo> _tabs = [
     TabInfo(Icons.format_list_numbered, 'Ranking', RankingPostScreen()),
     TabInfo(Icons.search, 'Search', SearchPostScreen()),
     TabInfo(Icons.home, 'Home', PostScreen()),
     TabInfo(Icons.person_pin , 'My Page', HistoryPostScreen()),
     TabInfo(Icons.settings, 'Setting', SettingScreen()),
-    //TabInfo(Icons.bolt, 'Com', CommentScreen(user: currentUser)),
+    TabInfo(Icons.bolt, 'Com', CommentScreen(user: currentUser)),
     TabInfo(Icons.supervised_user_circle, 'User', UserConfScreen()),
   ];
 
   @override
   Widget build(BuildContext context) {
     getNameData();
-    checkDeviceIdHash(context);
     return DefaultTabController(
-      length: 6,
+      length: 7,
       initialIndex: 2,
       child: Scaffold(
         appBar: AppBar(
@@ -101,58 +90,15 @@ class NewsListScreen extends StatelessWidget {
 
   initNameData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString("Name", initName);
-    await prefs.setString("Icon", initIcon);
+    await prefs.setString("Name", "まとめくん");
   }
 
   getNameData() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     var myStringData = await prefs.getString("Name");
-    //print("Name: " + myStringData);
+    print("Name: " + myStringData);
     if (myStringData == null) {
       initNameData();
     }
   }
-
-  Future checkDeviceIdHash(BuildContext context) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    var myStringData = await prefs.getString("devicehash");
-    print("devicehash: ");
-    print(myStringData);
-
-    if (myStringData == null) {
-      DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-      var deviceId;
-      if (Platform.isAndroid) {
-        AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-        deviceId = androidInfo.androidId;
-      } else if (Platform.isIOS) {
-        IosDeviceInfo iosDeviceInfo = await deviceInfo.iosInfo;
-        deviceId = iosDeviceInfo.identifierForVendor;
-      }
-      var bytes = utf8.encode(deviceId); // data being hashed
-      var digest = sha1.convert(bytes).toString();
-      await prefs.setString("devicehash", digest);
-
-      //create popup
-      AwesomeDialog(
-        context: context,
-        dialogType: DialogType.INFO_REVERSED,
-        animType: AnimType.BOTTOMSLIDE,
-        title: 'ユーザ名とアイコンが設定できます',
-        desc: '設定画面からユーザ名とアイコンを設定してください。',
-        //btnCancelOnPress: () {},
-        btnOkOnPress: () {},
-      )..show();
-
-      //サーバ側にも初期値を送信
-      var requestURL = baseURL + "/user/put";
-      var map = new Map<String, dynamic>();
-      map["name"] = initName;
-      map["devicehash"] = digest;
-      map["avatarURL"] = initIcon;
-      http.Response response = await http.post(requestURL, body: map);
-      print(response.statusCode);
-    }
-  }
-}Q
+}

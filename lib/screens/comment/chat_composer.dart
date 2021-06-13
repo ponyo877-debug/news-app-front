@@ -4,13 +4,13 @@ import 'package:http/http.dart' as http;
 
 class buildChatComposer extends StatefulWidget {
   const buildChatComposer(
-      {Key key, @required this.articleID, @required this.devideHash})
+      {Key key, @required this.articleID, @required this.deviceHash})
       : super(key: key);
 
   @override
   _buildChatComposer createState() => _buildChatComposer();
   final String articleID;
-  final String devideHash;
+  final String deviceHash;
 }
 
 // https://github.com/cybdom/messengerish
@@ -75,7 +75,7 @@ class _buildChatComposer extends State<buildChatComposer> {
               var map = new Map<String, dynamic>();
               map["articleID"] = widget.articleID;
               map["massage"] = message;
-              map["devicehash"] = widget.devideHash;
+              map["devicehash"] = widget.deviceHash;
               http.Response _ = await http.post(putCommentURL, body: map);
               _controller.clear();
             },
