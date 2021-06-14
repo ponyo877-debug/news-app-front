@@ -15,6 +15,9 @@ import 'webview_tools.dart';
 import 'comment_screen.dart';
 import 'comment/get_device_hash.dart';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'comment/comment_state.dart';
+
 // WebViewController _controller;
 class MatomeWebView extends StatefulWidget {
   final String title;
@@ -58,151 +61,158 @@ class _MatomeWebView extends State<MatomeWebView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset: true,
-      appBar: AppBar(
-        title: Text(widget.title),
-        actions: <Widget>[
-          PopupMenuButton(onSelected: (String s) async {
-            if (s == _tabs[0].title) {
-              await FlutterShare.share(
-                title: widget.title,
-                text: "title: " + widget.title,
-                linkUrl: "URL: " + widget.selectedUrl,
-              );
-            } else if (s == _tabs[1].title) {
-              var linkTitle = Uri.encodeComponent(widget.title);
-              var link = Uri.encodeComponent(widget.selectedUrl);
-              var url =
-                  "https://docs.google.com/forms/d/e/1FAIpQLSdbHG9M2IVrL1YTXg6pL1pk1GaDeUhm3_105Epp1UCjWO525w/viewform?usp=pp_url&entry.126191999=title%EF%BC%9A" +
-                      linkTitle +
-                      "%0AURL%EF%BC%9A" +
-                      link;
-              await Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => NormalWebView(
-                        title: s,
-                        selectedUrl: url,
-                      )));
-            }
-          }, itemBuilder: (BuildContext context) {
-            return _tabs.map((tab) {
-              return PopupMenuItem(
-                //child: tab.widget,
-                child: Row(children: <Widget>[
-                  Icon(tab.icon),
-                  SizedBox(width: 10),
-                  Text(tab.title)
-                ]),
-                value: tab.title,
-              );
-            }).toList();
-          })
-        ],
-      ),
-      body: FutureBuilder(
-        future: loadUri(widget.selectedUrl, widget.siteID),
-        builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
-          if (snapshot.hasData) {
-            var screenHeight = MediaQuery.of(context).size.height;
-            var appBarHeight = Scaffold.of(context).appBarMaxHeight;
-            var bottomBarHeight = AdMobService().getHeight(context).toInt();
-            var commentFieldHeight = 0;
-            var bodyHeight = screenHeight -
-                (appBarHeight + bottomBarHeight + commentFieldHeight);
-            var expandHeight = bodyHeight;
-            var contractHeight = bodyHeight * 0.5;
-            return Column(mainAxisSize: MainAxisSize.min, children: [
-              Container(
-                height: _isExpanded ? expandHeight : contractHeight,
-                decoration: BoxDecoration(
-                  // border: Border.all(color: Colors.blueGrey, width: 5),
-                  borderRadius: BorderRadius.all(Radius.circular(25)),
-                ),
-                child: GestureDetector(
-                  child: Scaffold(
-                      resizeToAvoidBottomInset: true,
-                      body: ClipRRect(
-                        borderRadius: BorderRadius.all(Radius.circular(20)),
-                        child: WebView(
-                          // initialUrl: widget.selectedUrl,
-                          javascriptMode: JavascriptMode.unrestricted,
-                          onWebViewCreated:
-                              (WebViewController webViewController) {
-                            // controller.complete(webViewController);
-                            _controller = webViewController;
-                            // print(snapshot.data);
-                            _controller.loadUrl(snapshot.data);
-                            _getRecom(widget.postID);
-                          },
-                        ),
-                      ),
-                      floatingActionButton: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        // mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Expanded(child: SizedBox()),
-                          Spacer(),
-                          ElevatedButton(
-                            onPressed: () {
-                              setState(() {
-                                print(_isExpanded);
-                                _isExpanded = !_isExpanded;
-                              });
+    return WillPopScope(
+      onWillPop: () {
+        context.read(commentProvider.notifier).clearComments();
+        Navigator.pop(context);
+        return Future.value(false);
+      },
+      child: Scaffold(
+        resizeToAvoidBottomInset: true,
+        appBar: AppBar(
+          title: Text(widget.title),
+          actions: <Widget>[
+            PopupMenuButton(onSelected: (String s) async {
+              if (s == _tabs[0].title) {
+                await FlutterShare.share(
+                  title: widget.title,
+                  text: "title: " + widget.title,
+                  linkUrl: "URL: " + widget.selectedUrl,
+                );
+              } else if (s == _tabs[1].title) {
+                var linkTitle = Uri.encodeComponent(widget.title);
+                var link = Uri.encodeComponent(widget.selectedUrl);
+                var url =
+                    "https://docs.google.com/forms/d/e/1FAIpQLSdbHG9M2IVrL1YTXg6pL1pk1GaDeUhm3_105Epp1UCjWO525w/viewform?usp=pp_url&entry.126191999=title%EF%BC%9A" +
+                        linkTitle +
+                        "%0AURL%EF%BC%9A" +
+                        link;
+                await Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => NormalWebView(
+                          title: s,
+                          selectedUrl: url,
+                        )));
+              }
+            }, itemBuilder: (BuildContext context) {
+              return _tabs.map((tab) {
+                return PopupMenuItem(
+                  //child: tab.widget,
+                  child: Row(children: <Widget>[
+                    Icon(tab.icon),
+                    SizedBox(width: 10),
+                    Text(tab.title)
+                  ]),
+                  value: tab.title,
+                );
+              }).toList();
+            })
+          ],
+        ),
+        body: FutureBuilder(
+          future: loadUri(widget.selectedUrl, widget.siteID),
+          builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+            if (snapshot.hasData) {
+              var screenHeight = MediaQuery.of(context).size.height;
+              var appBarHeight = Scaffold.of(context).appBarMaxHeight;
+              var bottomBarHeight = AdMobService().getHeight(context).toInt();
+              var commentFieldHeight = 0;
+              var bodyHeight = screenHeight -
+                  (appBarHeight + bottomBarHeight + commentFieldHeight);
+              var expandHeight = bodyHeight;
+              var contractHeight = bodyHeight * 0.5;
+              return Column(mainAxisSize: MainAxisSize.min, children: [
+                Container(
+                  height: _isExpanded ? expandHeight : contractHeight,
+                  decoration: BoxDecoration(
+                    // border: Border.all(color: Colors.blueGrey, width: 5),
+                    borderRadius: BorderRadius.all(Radius.circular(25)),
+                  ),
+                  child: GestureDetector(
+                    child: Scaffold(
+                        resizeToAvoidBottomInset: true,
+                        body: ClipRRect(
+                          borderRadius: BorderRadius.all(Radius.circular(20)),
+                          child: WebView(
+                            // initialUrl: widget.selectedUrl,
+                            javascriptMode: JavascriptMode.unrestricted,
+                            onWebViewCreated:
+                                (WebViewController webViewController) {
+                              // controller.complete(webViewController);
+                              _controller = webViewController;
+                              // print(snapshot.data);
+                              _controller.loadUrl(snapshot.data);
+                              _getRecom(widget.postID);
                             },
-                            child: Text(
-                              _isExpanded ? 'コメントを開く' : '記事を開く',
-                              maxLines: 1,
-                            ),
                           ),
-                          Spacer(),
-                          Expanded(
-                            child: recomPost.isNotEmpty
-                                ? Builder(
-                                    builder: (context) =>
-                                        _getRecomButton(context),
-                                  )
-                                : SizedBox(),
-                          )
-                        ],
-                      )),
-                  onTapDown: (details) {
-                    print("test");
-                    setState(() {
-                      print(_isExpanded);
-                      _isExpanded = true;
-                    });
-                    return false;
-                  },
-                  behavior: HitTestBehavior.opaque,
+                        ),
+                        floatingActionButton: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          // mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Expanded(child: SizedBox()),
+                            Spacer(),
+                            ElevatedButton(
+                              onPressed: () {
+                                setState(() {
+                                  print(_isExpanded);
+                                  _isExpanded = !_isExpanded;
+                                });
+                              },
+                              child: Text(
+                                _isExpanded ? 'コメントを開く' : '記事を開く',
+                                maxLines: 1,
+                              ),
+                            ),
+                            Spacer(),
+                            Expanded(
+                              child: recomPost.isNotEmpty
+                                  ? Builder(
+                                      builder: (context) =>
+                                          _getRecomButton(context),
+                                    )
+                                  : SizedBox(),
+                            )
+                          ],
+                        )),
+                    onTapDown: (details) {
+                      print("test");
+                      setState(() {
+                        print(_isExpanded);
+                        _isExpanded = true;
+                      });
+                      return false;
+                    },
+                    behavior: HitTestBehavior.opaque,
+                  ),
                 ),
-              ),
-              _isExpanded
-                  ? SizedBox()
-                  : CommentScreen(
-                      articleID: widget.postID, deviceHash: _deviceIdHash),
-            ]);
-          } else {
-            return new Center(
-              child: new Container(
-                margin: const EdgeInsets.only(top: 8.0),
-                width: 32.0,
-                height: 32.0,
-                child: const CircularProgressIndicator(),
-              ),
-            );
-          }
-        },
+                _isExpanded
+                    ? SizedBox()
+                    : CommentScreen(
+                        articleID: widget.postID, deviceHash: _deviceIdHash),
+              ]);
+            } else {
+              return new Center(
+                child: new Container(
+                  margin: const EdgeInsets.only(top: 8.0),
+                  width: 32.0,
+                  height: 32.0,
+                  child: const CircularProgressIndicator(),
+                ),
+              );
+            }
+          },
+        ),
+        bottomNavigationBar: Platform.isAndroid
+            ? AdmobBanner(
+                adUnitId: AdMobService().getBannerAdUnitId(),
+                adSize: AdmobBannerSize(
+                  width: MediaQuery.of(context).size.width.toInt(),
+                  height: AdMobService().getHeight(context).toInt(),
+                  name: 'BANNER',
+                ),
+              )
+            : null,
       ),
-      bottomNavigationBar: Platform.isAndroid
-          ? AdmobBanner(
-              adUnitId: AdMobService().getBannerAdUnitId(),
-              adSize: AdmobBannerSize(
-                width: MediaQuery.of(context).size.width.toInt(),
-                height: AdMobService().getHeight(context).toInt(),
-                name: 'BANNER',
-              ),
-            )
-          : null,
     );
   }
 

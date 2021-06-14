@@ -3,23 +3,20 @@ import 'chat_theme.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/services.dart';
 import 'dart:convert';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'comment_state.dart';
 
-class buildChatComposer extends StatefulWidget {
-  const buildChatComposer(
+class buildChatComposer extends StatelessWidget {
+  buildChatComposer(
       {Key key, @required this.articleID, @required this.deviceHash})
       : super(key: key);
 
-  @override
-  _buildChatComposer createState() => _buildChatComposer();
   final String articleID;
   final String deviceHash;
-}
 
 // https://github.com/cybdom/messengerish
 // https://github.com/itzpradip/flutter-chat-app
 // https://github.com/tonydavidx/chattie-ui-design
-class _buildChatComposer extends State<buildChatComposer> {
-// Future<Container> buildChatComposer(String _articleID, String _devideHash) async {
   var _controller = TextEditingController();
   String baseURL = "https://gitouhon-juku-k8s2.ga";
 
@@ -82,14 +79,15 @@ class _buildChatComposer extends State<buildChatComposer> {
               var message = _controller.text;
               var putCommentURL = baseURL + "/comment/put";
               var map = new Map<String, dynamic>();
-              map["articleID"] = widget.articleID;
+              map["articleID"] = this.articleID;
               map["massage"] = message;
-              map["devicehash"] = widget.deviceHash;
+              map["devicehash"] = this.deviceHash;
               print('putCommentURL: $putCommentURL');
-              http.Response response = await http.post(putCommentURL, body: map);
+              http.Response response =
+                  await http.post(putCommentURL, body: map);
               var res = json.decode(response.body);
               print('res["Status"]: ${res["Status"]}');
-              if(res["Status"] != "Ok"){
+              if (res["Status"] != "Ok") {
                 final snackBar = SnackBar(
                   content: Text('コメントに不適切な表現が含まれていたようです\n修正してください'),
                   duration: Duration(seconds: 2),
@@ -97,9 +95,12 @@ class _buildChatComposer extends State<buildChatComposer> {
 
                 ScaffoldMessenger.of(context).showSnackBar(snackBar);
               } else {
-                print('deviceHash: ${widget.deviceHash}');
+                print('deviceHash: ${this.deviceHash}');
                 print('response.statusCode: ${response.statusCode}');
                 _controller.clear();
+                context
+                    .read(commentProvider.notifier)
+                    .getComments(this.articleID);
               }
             },
           )

@@ -6,219 +6,230 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'comment_state.dart';
 
 // https://konifar.hatenablog.com/entry/2018/02/11/081031
 // https://zenn.dev/hayabusabusa/articles/7bf73f007584aa4e0ee8
-class Conversation extends StatefulWidget {
-  const Conversation(
-      {Key key, @required this.articleID, @required this.deviceHash})
+class Conversation extends StatelessWidget {
+  Conversation({Key key, @required this.articleID, @required this.deviceHash})
       : super(key: key);
 
-  @override
-  _Conversation createState() => _Conversation();
   final String articleID;
   final String deviceHash;
-}
 
-class _Conversation extends State<Conversation> {
-  // String _deviceIdHash;
-  List commentList = [];
   String baseURL = "http://gitouhon-juku-k8s2.ga";
 
   @override
-  void initState() {
-    super.initState();
-    print("initState");
-    getComments();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    var num_comment = commentList == null ? 0 : commentList.length;
-    if (num_comment == 0) {
-      return ListView(
-          children: [SizedBox(height: 10), Center(child: Text("コメントはありません"))]);
-    } else {
-      print("%%%%%%%%%%");
-      return ListView.builder(
-          reverse: false, // コメント順: 新規が下
-          itemCount: num_comment,
-          itemBuilder: (context, int index) {
-            print('commentList[index] ${commentList[index]}');
-            final comment = commentList[index];
-            bool isMe = comment["deviceHash"] == widget.deviceHash;
-            return Container(
-              margin: EdgeInsets.only(top: 10),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment:
-                        isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      if (!isMe)
-                        CircleAvatar(
-                          radius: 15,
-                          backgroundColor: Colors.white,
-                          backgroundImage: comment["avatar"].startsWith('http')
-                              ? NetworkImage(comment["avatar"])
-                              : AssetImage(comment["avatar"]),
-                        ),
-                      SizedBox(
-                        width: 10,
-                      ),
-                      Container(
-                          padding: EdgeInsets.all(10),
-                          constraints: BoxConstraints(
-                              maxWidth:
-                                  MediaQuery.of(context).size.width * 0.75),
-                          decoration: BoxDecoration(
-                              color: isMe
-                                  ? MyTheme.kAccentColor
-                                  : Colors.grey[200],
-                              borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(15),
-                                topRight: Radius.circular(15),
-                                bottomLeft: Radius.circular(isMe ? 15 : 0),
-                                bottomRight: Radius.circular(isMe ? 0 : 15),
-                              )),
-                          child: Column(
-                            children: [
-                              if (!isMe)
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      comment["username"],
-                                      textAlign: TextAlign.right,
-                                      style: MyTheme.headerTextMessage.copyWith(
-                                        color: Colors.lightBlue,
-                                      ),
-                                    ),
-                                    SizedBox(width: 10),
-                                    Text(comment["deviceHash"].substring(0, 6),
-                                        textAlign: TextAlign.right,
-                                        style:
-                                            MyTheme.headerTextMessage.copyWith(
-                                          color: Colors.grey[400],
-                                        )),
-                                  ],
-                                ),
-                              Text(
-                                comment["massage"],
-                                textAlign: TextAlign.left,
-                                style: MyTheme.bodyTextMessage.copyWith(
-                                    color:
-                                        isMe ? Colors.white : Colors.grey[800]),
-                              )
-                            ],
-                          )),
-                    ],
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 5),
-                    child: Row(
+    context.read(commentProvider.notifier).getComments(this.articleID);
+    return Consumer(builder: (context, watch, _) {
+      final commentList = watch(commentProvider);
+      var num_comment = commentList == null ? 0 : commentList.length;
+      //print(num_comment);
+      //print("aaaaaaaaaaaaaaaa");
+      //print(commentList);
+      if (commentList.length == 0) {
+        return Center(child: CircularProgressIndicator());
+      } else if (commentList[0] == "nodata") {
+        return ListView(children: [
+          SizedBox(height: 10),
+          Center(
+              child: Text("コメントはありません", style: TextStyle(color: Colors.black)))
+        ]);
+      } else {
+        print("%%%%%%%%%%");
+        return ListView.builder(
+            reverse: false, // コメント順: 新規が下
+            itemCount: num_comment,
+            itemBuilder: (context, int index) {
+              print('commentList[index] ${commentList[index]}');
+              final comment = commentList[index];
+              bool isMe = comment["deviceHash"] == this.deviceHash;
+              return Container(
+                margin: EdgeInsets.only(top: 10),
+                child: Column(
+                  children: [
+                    Row(
                       mainAxisAlignment: isMe
                           ? MainAxisAlignment.end
                           : MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         if (!isMe)
-                          SizedBox(
-                            width: 40,
+                          CircleAvatar(
+                            radius: 15,
+                            backgroundColor: Colors.white,
+                            backgroundImage:
+                                comment["avatar"].startsWith('http')
+                                    ? NetworkImage(comment["avatar"])
+                                    : AssetImage(comment["avatar"]),
                           ),
-                        Text(
-                          comment["postDate"],
-                          style: MyTheme.bodyTextTime,
+                        SizedBox(
+                          width: 10,
                         ),
-                        if (!isMe)
-                          SizedBox(
-                            width: 5,
-                          ),
-                        if (!isMe)
-                          GestureDetector(
-                            child: Icon(Icons.announcement_rounded,
-                                color: Color(0xffAEABC9)),
-                            onTap: () {
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext context) =>
-                                    new AlertDialog(
-                                  title: Text("通報理由を入力してください"),
-                                  content: Container(
-                                      child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                        Text('user: ' + comment["username"]),
-                                        Text('message: ' + comment["massage"]),
-                                        ReportDropdown(dropdownList: <String>[
-                                          '通報理由を選択',
-                                          '性的な内容',
-                                          '出会い目的',
-                                          '荒らし',
-                                          '他アプリへの移動',
-                                          '勧誘・営業',
-                                          '犯罪行為',
-                                          'その他'
-                                        ]),
-                                        Text("通報内容はアプリ管理者に報告されます"),
-                                      ])),
-                                  // ボタンの配置
-                                  actions: <Widget>[
-                                    new TextButton(
-                                        child: const Text('キャンセル'),
-                                        onPressed: () {
-                                          print('Cancel!');
-                                          Navigator.pop(context);
-                                        }),
-                                    new TextButton(
-                                        child: const Text('通報'),
-                                        onPressed: () {
-                                          print('Ok!');
-                                          execWebHook(comment["massage"],
-                                              comment["commentID"]);
-                                          Navigator.pop(context);
-                                        })
-                                  ],
-                                ),
-                              );
-                            },
-                          )
+                        Container(
+                            padding: EdgeInsets.all(10),
+                            constraints: BoxConstraints(
+                                maxWidth:
+                                    MediaQuery.of(context).size.width * 0.75),
+                            decoration: BoxDecoration(
+                                color: isMe
+                                    ? MyTheme.kAccentColor
+                                    : Colors.grey[200],
+                                borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(15),
+                                  topRight: Radius.circular(15),
+                                  bottomLeft: Radius.circular(isMe ? 15 : 0),
+                                  bottomRight: Radius.circular(isMe ? 0 : 15),
+                                )),
+                            child: Column(
+                              children: [
+                                if (!isMe)
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        comment["username"],
+                                        textAlign: TextAlign.right,
+                                        style:
+                                            MyTheme.headerTextMessage.copyWith(
+                                          color: Colors.lightBlue,
+                                        ),
+                                      ),
+                                      SizedBox(width: 10),
+                                      Text(
+                                          comment["deviceHash"].substring(0, 6),
+                                          textAlign: TextAlign.right,
+                                          style: MyTheme.headerTextMessage
+                                              .copyWith(
+                                            color: Colors.grey[400],
+                                          )),
+                                    ],
+                                  ),
+                                Text(
+                                  comment["massage"],
+                                  textAlign: TextAlign.left,
+                                  style: MyTheme.bodyTextMessage.copyWith(
+                                      color: isMe
+                                          ? Colors.white
+                                          : Colors.grey[800]),
+                                )
+                              ],
+                            )),
                       ],
                     ),
-                  )
-                ],
-              ),
-            );
-          });
-    }
+                    Padding(
+                      padding: const EdgeInsets.only(top: 5),
+                      child: Row(
+                        mainAxisAlignment: isMe
+                            ? MainAxisAlignment.end
+                            : MainAxisAlignment.start,
+                        children: [
+                          if (!isMe)
+                            SizedBox(
+                              width: 40,
+                            ),
+                          Text(
+                            comment["postDate"],
+                            style: MyTheme.bodyTextTime,
+                          ),
+                          if (!isMe)
+                            SizedBox(
+                              width: 5,
+                            ),
+                          if (!isMe)
+                            GestureDetector(
+                              child: Icon(Icons.announcement_rounded,
+                                  color: Color(0xffAEABC9)),
+                              onTap: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) =>
+                                      new AlertDialog(
+                                    title: Text("通報理由を入力してください"),
+                                    content: Container(
+                                        child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                          Text('user: ' + comment["username"]),
+                                          Text(
+                                              'message: ' + comment["massage"]),
+                                          ReportDropdown(dropdownList: <String>[
+                                            '通報理由を選択',
+                                            '性的な内容',
+                                            '出会い目的',
+                                            '荒らし',
+                                            '他アプリへの移動',
+                                            '勧誘・営業',
+                                            '犯罪行為',
+                                            'その他'
+                                          ]),
+                                          Text("通報内容はアプリ管理者に報告されます"),
+                                        ])),
+                                    // ボタンの配置
+                                    actions: <Widget>[
+                                      new TextButton(
+                                          child: const Text('キャンセル'),
+                                          onPressed: () {
+                                            print('Cancel!');
+                                            Navigator.pop(context);
+                                          }),
+                                      new TextButton(
+                                          child: const Text('通報'),
+                                          onPressed: () {
+                                            print('Ok!');
+                                            execWebHook(comment["massage"],
+                                                comment["commentID"]);
+                                            Navigator.pop(context);
+                                          })
+                                    ],
+                                  ),
+                                );
+                              },
+                            )
+                        ],
+                      ),
+                    )
+                  ],
+                ),
+              );
+            });
+      }
+    });
   }
 
   Future execWebHook(String message, String commentID) async {
     var slackWebhookURL =
         'https://hooks.slack.com/services/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';
     var reportText = '*以下のコメントが通報されました*\n- articleID: ' +
-        widget.articleID +
+        this.articleID +
         '\n- CommentID: ' +
         commentID +
         '\n- 本文: ' +
-        message + '\n削除コマンド: `db.article_col.update({_id: ObjectId("' + widget.articleID + '")}, {\$pull: {\'comments\': {commentID: \'' + commentID + '\'}}})`';
+        message +
+        '\n削除コマンド: `db.article_col.update({_id: ObjectId("' +
+        this.articleID +
+        '")}, {\$pull: {\'comments\': {commentID: \'' +
+        commentID +
+        '\'}}})`';
     String body = json.encode({'text': reportText});
     http.Response res = await http.post(slackWebhookURL, body: body);
   }
 
-  Future getComments() async {
-    var getCommentURL = baseURL + "/comment/get?articleID=" + widget.articleID;
-    print('getCommentURL: $getCommentURL');
-    http.Response response = await http.get(getCommentURL);
-    var data = json.decode(response.body);
-    if (mounted) {
-      setState(() {
-        commentList = data["data"];
-      });
-    }
-  }
+  // Future getComments() async {
+  //   var getCommentURL = baseURL + "/comment/get?articleID=" + widget.articleID;
+  //   print('getCommentURL: $getCommentURL');
+  //   http.Response response = await http.get(getCommentURL);
+  //   var data = json.decode(response.body);
+  //   if (mounted) {
+  //     setState(() {
+  //       commentList = data["data"];
+  //     });
+  //   }
+  // }
 }
 
 class ReportDropdown extends StatefulWidget {
