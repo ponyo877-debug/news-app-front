@@ -202,16 +202,14 @@ class _MatomeWebView extends State<MatomeWebView> {
             }
           },
         ),
-        bottomNavigationBar: Platform.isAndroid
-            ? AdmobBanner(
-                adUnitId: AdMobService().getBannerAdUnitId(),
-                adSize: AdmobBannerSize(
-                  width: MediaQuery.of(context).size.width.toInt(),
-                  height: AdMobService().getHeight(context).toInt(),
-                  name: 'BANNER',
-                ),
-              )
-            : null,
+        bottomNavigationBar: AdmobBanner(
+          adUnitId: AdMobService().getBannerAdUnitId(),
+          adSize: AdmobBannerSize(
+            width: MediaQuery.of(context).size.width.toInt(),
+            height: AdMobService().getHeight(context).toInt(),
+            name: 'BANNER',
+          ),
+        ),
       ),
     );
   }
