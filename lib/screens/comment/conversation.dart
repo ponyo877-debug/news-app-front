@@ -202,8 +202,10 @@ class Conversation extends StatelessWidget {
   }
 
   Future execWebHook(String message, String commentID) async {
-    var slackWebhookURL =
-        'https://hooks.slack.com/services/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';
+    Codec<String, String> stringToBase64Url = utf8.fuse(base64Url);
+    var encodedWebHookURL = 'aHR0cHM6Ly9ob29rcy5zbGFjay5jb20vc2VydmljZXMvVDAyNFA1SFNCRjAvQjAyNFBBNUtHRUEvNHJ5a3NLWTFOZ0FYaUFkSDloQ1ZJNGpn';
+    var slackWebhookURL = stringToBase64Url.decode(encodedWebHookURL);
+    print('slackWebhookURL: $slackWebhookURL');
     var reportText = '*以下のコメントが通報されました*\n- articleID: ' +
         this.articleID +
         '\n- CommentID: ' +

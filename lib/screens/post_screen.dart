@@ -70,8 +70,9 @@ class LatestScreen extends StatelessWidget {
         } else {
           childWidget = ListView.builder(
             physics: AlwaysScrollableScrollPhysics(),
+            itemCount: list.length,
             itemBuilder: (BuildContext context, int index) {
-              if (index == list.length) {
+              if (index == list.length - 1) {
                 //print(list);
                 context.read(newsProvider.notifier).getPost(false);
                 return new Center(
