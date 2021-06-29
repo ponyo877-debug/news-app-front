@@ -22,6 +22,11 @@ class buildChatComposer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // https://stackoverflow.com/questions/49269319/get-keyboard-height-in-flutter
+    // var bottomHeight = MediaQuery.of(context).viewInsets.bottom;
+    // print('bottomHeight: $bottomHeight');
+    // var viewInsets = EdgeInsets.fromWindowPadding(WidgetsBinding.instance.window.viewInsets,WidgetsBinding.instance.window.devicePixelRatio);
+    // print('viewInsets.bottom: ${viewInsets.bottom}');
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 20),
       color: Colors.white,
@@ -76,6 +81,10 @@ class buildChatComposer extends StatelessWidget {
               ),
             ),
             onTap: () async {
+              final FocusScopeNode currentScope = FocusScope.of(context);
+              if (!currentScope.hasPrimaryFocus && currentScope.hasFocus) {
+                FocusManager.instance.primaryFocus.unfocus();
+              }
               var message = _controller.text;
               var putCommentURL = baseURL + "/comment/put";
               var map = new Map<String, dynamic>();

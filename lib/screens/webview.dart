@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 import 'dart:async';
 import 'dart:convert';
 import 'news_card.dart';
@@ -112,24 +113,26 @@ class _MatomeWebView extends State<MatomeWebView> {
           future: loadUri(widget.selectedUrl, widget.siteID),
           builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
             if (snapshot.hasData) {
+              var commentFieldHeight = 60;
               var screenHeight = MediaQuery.of(context).size.height;
               var appBarHeight = Scaffold.of(context).appBarMaxHeight;
               var bottomBarHeight = AdMobService().getHeight(context).toInt();
-              var commentFieldHeight = 0;
-              var bodyHeight = screenHeight -
-                  (appBarHeight + bottomBarHeight + commentFieldHeight);
-              var expandHeight = bodyHeight;
-              var contractHeight = bodyHeight * 0.5;
+              var viewInsets = EdgeInsets.fromWindowPadding(WidgetsBinding.instance.window.viewInsets,WidgetsBinding.instance.window.devicePixelRatio).bottom;
+              var notbodyHeight = appBarHeight + bottomBarHeight + commentFieldHeight + viewInsets;
+
+              var expandedBodyHeight = screenHeight - notbodyHeight;
+              var contractBodyHeight = expandedBodyHeight * 0.5;
+              print('contractBodyHeight: $contractBodyHeight');
               return Column(mainAxisSize: MainAxisSize.min, children: [
                 Container(
-                  height: _isExpanded ? expandHeight : contractHeight,
+                  height: _isExpanded ? expandedBodyHeight : contractBodyHeight,
                   decoration: BoxDecoration(
                     // border: Border.all(color: Colors.blueGrey, width: 5),
                     borderRadius: BorderRadius.all(Radius.circular(25)),
                   ),
                   child: GestureDetector(
                     child: Scaffold(
-                        resizeToAvoidBottomInset: true,
+                        resizeToAvoidBottomInset: false,
                         body: ClipRRect(
                           borderRadius: BorderRadius.all(Radius.circular(20)),
                           child: WebView(
